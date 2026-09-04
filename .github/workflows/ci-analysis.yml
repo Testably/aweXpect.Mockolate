@@ -24,7 +24,7 @@ jobs:
                 with:
                     dotnet-version: |
                         8.0.x
-                        10.0.x
+                        10.0.3xx
             -   name: Upload mutation dashboard and create comment
                 run: ./build.sh MutationTestDashboard
                 env:
@@ -46,7 +46,7 @@ jobs:
                 with:
                     dotnet-version: |
                         8.0.x
-                        10.0.x
+                        10.0.3xx
             -   name: Create benchmark comment
                 run: ./build.sh BenchmarkComment
                 env:

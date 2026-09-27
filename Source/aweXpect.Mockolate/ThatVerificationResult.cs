@@ -47,7 +47,7 @@ public static partial class ThatVerificationResult
 		ExpectationGrammars grammars,
 		int expected,
 		WithinOptions options)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
 		private int _count;
@@ -145,12 +145,12 @@ public static partial class ThatVerificationResult
 		{
 			if (_count == 0)
 			{
-				stringBuilder.Append("never found ").Append(it);
+				stringBuilder.Append("never found ").Append(It);
 			}
 			else
 			{
 				// Stryker disable once Equality : unreachable boundary — AppendNormalResult only runs when _count != expected
-				stringBuilder.Append("found ").Append(it).Append(_count < expected ? " only " : " ")
+				stringBuilder.Append("found ").Append(It).Append(_count < expected ? " only " : " ")
 					.Append(_count.ToAmountString());
 			}
 		}
@@ -168,7 +168,7 @@ public static partial class ThatVerificationResult
 		}
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(it).Append(" was");
+			=> stringBuilder.Append(It).Append(" was");
 
 		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
 		{
@@ -189,7 +189,7 @@ public static partial class ThatVerificationResult
 		string it,
 		ExpectationGrammars grammars,
 		int expected)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars),
 			IValueConstraint<VerificationResult<TVerify>>
 	{
 		private int _count;
@@ -222,7 +222,7 @@ public static partial class ThatVerificationResult
 			=> stringBuilder.Append(_expectation).Append(" at most ").Append(expected.ToAmountString());
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(it).Append(' ').Append(_count.ToAmountString());
+			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(_expectation).Append(" more than ").Append(expected.ToAmountString());
@@ -231,11 +231,11 @@ public static partial class ThatVerificationResult
 		{
 			if (_count == 0)
 			{
-				stringBuilder.Append("never found ").Append(it);
+				stringBuilder.Append("never found ").Append(It);
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(it).Append(" only ").Append(_count.ToAmountString());
+				stringBuilder.Append("found ").Append(It).Append(" only ").Append(_count.ToAmountString());
 			}
 		}
 
@@ -259,7 +259,7 @@ public static partial class ThatVerificationResult
 		ExpectationGrammars grammars,
 		int expected,
 		WithinOptions options)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
 		private int _count;
@@ -347,11 +347,11 @@ public static partial class ThatVerificationResult
 		{
 			if (_count == 0)
 			{
-				stringBuilder.Append("never found ").Append(it);
+				stringBuilder.Append("never found ").Append(It);
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(it).Append(" only ").Append(_count.ToAmountString());
+				stringBuilder.Append("found ").Append(It).Append(" only ").Append(_count.ToAmountString());
 			}
 		}
 
@@ -359,7 +359,7 @@ public static partial class ThatVerificationResult
 			=> stringBuilder.Append(_expectation).Append(" less than ").Append(expected.ToAmountString());
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(it).Append(' ').Append(_count.ToAmountString());
+			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 
 		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
 		{

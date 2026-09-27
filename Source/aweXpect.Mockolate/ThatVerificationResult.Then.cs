@@ -29,7 +29,7 @@ public static partial class ThatVerificationResult
 		string it,
 		ExpectationGrammars grammars,
 		Func<T, VerificationResult<T>>[] interactions)
-		: ConstraintResult.WithValue<VerificationResult<T>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<T>>(it, grammars),
 			IValueConstraint<VerificationResult<T>>
 	{
 		private List<string>? _expectations;
@@ -112,7 +112,7 @@ public static partial class ThatVerificationResult
 		}
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(it).Append(' ').Append(_error);
+			=> stringBuilder.Append(It).Append(' ').Append(_error);
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
 		{
@@ -121,7 +121,7 @@ public static partial class ThatVerificationResult
 		}
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(it).Append(" did");
+			=> stringBuilder.Append(It).Append(" did");
 
 		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
 		{

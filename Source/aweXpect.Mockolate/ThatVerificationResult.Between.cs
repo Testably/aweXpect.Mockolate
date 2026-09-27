@@ -41,7 +41,7 @@ public static partial class ThatVerificationResult
 		int minimum,
 		int maximum,
 		WithinOptions options)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
 		private int _count = -1;
@@ -130,11 +130,11 @@ public static partial class ThatVerificationResult
 		{
 			if (_count == 0)
 			{
-				stringBuilder.Append("never found ").Append(it);
+				stringBuilder.Append("never found ").Append(It);
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(it).Append(_count < minimum ? " only " : " ")
+				stringBuilder.Append("found ").Append(It).Append(_count < minimum ? " only " : " ")
 					.Append(_count.ToAmountString());
 			}
 		}
@@ -144,7 +144,7 @@ public static partial class ThatVerificationResult
 				.Append(maximum).Append(" times");
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(it).Append(' ').Append(_count.ToAmountString());
+			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 
 		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
 		{

@@ -41,7 +41,7 @@ public static partial class ThatVerificationResult
 		Func<int, bool> predicate,
 		string predicateExpression,
 		WithinOptions options)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(grammars),
+		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
 		private int _count = -1;
@@ -129,11 +129,11 @@ public static partial class ThatVerificationResult
 		{
 			if (_count == 0)
 			{
-				stringBuilder.Append("never found ").Append(it);
+				stringBuilder.Append("never found ").Append(It);
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(it).Append(' ').Append(_count.ToAmountString());
+				stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 			}
 		}
 

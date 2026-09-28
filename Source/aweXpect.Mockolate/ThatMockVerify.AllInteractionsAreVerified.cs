@@ -20,13 +20,14 @@ public static partial class ThatMockVerify
 	public static AndOrResult<IMockVerify<TVerify>, IThat<IMockVerify<TVerify>>>
 		AllInteractionsAreVerified<TVerify>(
 			this IThat<IMockVerify<TVerify>> subject)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, _, grammars)
-				=> new AllInteractionsAreVerifiedConstraint<TVerify>(grammars)),
+		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
+				=> new AllInteractionsAreVerifiedConstraint<TVerify>(it, grammars)),
 			subject);
 
 	private sealed class AllInteractionsAreVerifiedConstraint<TVerify>(
+		string it,
 		ExpectationGrammars grammars)
-		: ConstraintResult.WithValue<IMockVerify<TVerify>>(grammars),
+		: ConstraintResult.WithValue<IMockVerify<TVerify>>(it, grammars),
 			IValueConstraint<IMockVerify<TVerify>>
 	{
 		public ConstraintResult IsMetBy(IMockVerify<TVerify> actual)

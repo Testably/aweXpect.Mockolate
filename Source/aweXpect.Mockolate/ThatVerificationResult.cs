@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,18 +26,29 @@ public static partial class ThatVerificationResult
 			_ => $"{number} times",
 		};
 
-	private static void AppendAllInteractions(ExpectationBuilder expectationBuilder, IMock? mock)
+	private static string? FormatAllInteractions(IMock? mock)
 	{
 		if (mock is null)
 		{
-			return;
+			return null;
 		}
 
 		IMockInteractions allInteractions = mock.MockRegistry.Interactions;
-		string interactionsText = Formatter.Format(allInteractions, FormattingOptions.MultipleLines);
-		expectationBuilder.UpdateContexts(contexts => contexts
-			.Remove("All Interactions")
-			.Add(new ResultContext.SyncCallback("All Interactions", () => interactionsText)));
+		return Formatter.Format(allInteractions, FormattingOptions.MultipleLines);
+	}
+
+	private static void AppendInteractionContexts(ResultContextCollector contexts,
+		string? matchingInteractions, string? allInteractions)
+	{
+		if (matchingInteractions is not null)
+		{
+			contexts.Add(new ResultContext.SyncCallback("Matching Interactions", () => matchingInteractions));
+		}
+
+		if (allInteractions is not null)
+		{
+			contexts.Add(new ResultContext.SyncCallback("All Interactions", () => allInteractions));
+		}
 	}
 
 	private sealed class HasExactlyConstraint<TVerify>(
@@ -52,8 +62,10 @@ public static partial class ThatVerificationResult
 	{
 		private int _count;
 		private string? _expectation;
+		private string? _matchingInteractions;
+		private string? _allInteractions;
 
-		public async Task<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
 			CancellationToken cancellationToken)
 		{
 			if (options.CancellationToken is not null)
@@ -78,10 +90,7 @@ public static partial class ThatVerificationResult
 				{
 					Outcome = await asyncVerificationResult.VerifyAsync(interactions =>
 					{
-						string interactionsText = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-						expectationBuilder.UpdateContexts(contexts => contexts
-							.Remove("Matching Interactions")
-							.Add(new ResultContext.SyncCallback("Matching Interactions", () => interactionsText)));
+						_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 						_count = interactions.Length;
 						return interactions.Length == expected;
 					})
@@ -89,20 +98,15 @@ public static partial class ThatVerificationResult
 						: Outcome.Failure;
 					if (Outcome == Outcome.Failure)
 					{
-						AppendAllInteractions(expectationBuilder,
-							((IVerificationResult<TVerify>)actual).Object as IMock);
+						_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 					}
 
 					return this;
 				}
 				catch (MockVerificationTimeoutException)
 				{
-					string interactionsText = Formatter.Format(((IVerificationResult)actual).Interactions,
+					_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
 						FormattingOptions.MultipleLines);
-					expectationBuilder.UpdateContexts(contexts => contexts
-						.Remove("Matching Interactions")
-						.Add(new ResultContext.SyncCallback("Matching Interactions",
-							() => interactionsText)));
 					Outcome = Outcome.Failure;
 					return this;
 				}
@@ -113,9 +117,7 @@ public static partial class ThatVerificationResult
 			Actual = actual;
 			Outcome = result.Verify(interactions =>
 			{
-				string context = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-				expectationBuilder.UpdateContexts(contexts => contexts.Add(
-					new ResultContext.SyncCallback("Matching Interactions", () => context)));
+				_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 				_count = interactions.Length;
 				return interactions.Length == expected;
 			})
@@ -123,7 +125,7 @@ public static partial class ThatVerificationResult
 				: Outcome.Failure;
 			if (Outcome == Outcome.Failure)
 			{
-				AppendAllInteractions(expectationBuilder, ((IVerificationResult<TVerify>)actual).Object as IMock);
+				_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 			}
 
 			return this;
@@ -170,7 +172,10 @@ public static partial class ThatVerificationResult
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(" was");
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override void AppendContexts(ResultContextCollector contexts)
+			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    Actual is IVerificationResult<TVerify> verificationResult &&
@@ -180,12 +185,11 @@ public static partial class ThatVerificationResult
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 
 	private sealed class HasAtMostConstraint<TVerify>(
-		ExpectationBuilder expectationBuilder,
 		string it,
 		ExpectationGrammars grammars,
 		int expected)
@@ -194,6 +198,8 @@ public static partial class ThatVerificationResult
 	{
 		private int _count;
 		private string? _expectation;
+		private string? _matchingInteractions;
+		private string? _allInteractions;
 
 		public ConstraintResult IsMetBy(VerificationResult<TVerify> actual)
 		{
@@ -202,9 +208,7 @@ public static partial class ThatVerificationResult
 			Actual = actual;
 			Outcome = result.Verify(interactions =>
 			{
-				string context = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-				expectationBuilder.UpdateContexts(contexts => contexts.Add(
-					new ResultContext.SyncCallback("Matching Interactions", () => context)));
+				_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 				_count = interactions.Length;
 				return interactions.Length <= expected;
 			})
@@ -212,8 +216,7 @@ public static partial class ThatVerificationResult
 				: Outcome.Failure;
 			if (Outcome == Outcome.Failure)
 			{
-				AppendAllInteractions(expectationBuilder,
-					((IVerificationResult<TVerify>)actual).Object as IMock);
+				_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 			}
 			return this;
 		}
@@ -239,7 +242,10 @@ public static partial class ThatVerificationResult
 			}
 		}
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override void AppendContexts(ResultContextCollector contexts)
+			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    Actual is IVerificationResult<TVerify> verificationResult &&
@@ -249,7 +255,7 @@ public static partial class ThatVerificationResult
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 
@@ -264,8 +270,10 @@ public static partial class ThatVerificationResult
 	{
 		private int _count;
 		private string? _expectation;
+		private string? _matchingInteractions;
+		private string? _allInteractions;
 
-		public async Task<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
 			CancellationToken cancellationToken)
 		{
 			if (options.CancellationToken is not null)
@@ -290,10 +298,7 @@ public static partial class ThatVerificationResult
 				{
 					Outcome = await asyncVerificationResult.VerifyAsync(interactions =>
 					{
-						string interactionsText = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-						expectationBuilder.UpdateContexts(contexts => contexts
-							.Remove("Matching Interactions")
-							.Add(new ResultContext.SyncCallback("Matching Interactions", () => interactionsText)));
+						_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 						_count = interactions.Length;
 						return interactions.Length >= expected;
 					})
@@ -301,19 +306,14 @@ public static partial class ThatVerificationResult
 						: Outcome.Failure;
 					if (Outcome == Outcome.Failure)
 					{
-						AppendAllInteractions(expectationBuilder,
-							((IVerificationResult<TVerify>)actual).Object as IMock);
+						_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 					}
 					return this;
 				}
 				catch (MockVerificationTimeoutException)
 				{
-					string interactionsText = Formatter.Format(((IVerificationResult)actual).Interactions,
+					_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
 						FormattingOptions.MultipleLines);
-					expectationBuilder.UpdateContexts(contexts => contexts
-						.Remove("Matching Interactions")
-						.Add(new ResultContext.SyncCallback("Matching Interactions",
-							() => interactionsText)));
 					Outcome = Outcome.Failure;
 					return this;
 				}
@@ -324,9 +324,7 @@ public static partial class ThatVerificationResult
 			Actual = actual;
 			Outcome = result.Verify(interactions =>
 			{
-				string context = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-				expectationBuilder.UpdateContexts(contexts => contexts
-					.Add(new ResultContext.SyncCallback("Matching Interactions", () => context)));
+				_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 				_count = interactions.Length;
 				return interactions.Length >= expected;
 			})
@@ -334,8 +332,7 @@ public static partial class ThatVerificationResult
 				: Outcome.Failure;
 			if (Outcome == Outcome.Failure)
 			{
-				AppendAllInteractions(expectationBuilder,
-					((IVerificationResult<TVerify>)actual).Object as IMock);
+				_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 			}
 			return this;
 		}
@@ -361,7 +358,10 @@ public static partial class ThatVerificationResult
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override void AppendContexts(ResultContextCollector contexts)
+			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    Actual is IVerificationResult<TVerify> verificationResult &&
@@ -371,7 +371,7 @@ public static partial class ThatVerificationResult
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 }

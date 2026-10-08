@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
@@ -74,7 +73,7 @@ public static partial class ThatMockVerify
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append("all were");
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    new MyDescribableSubject<TVerify>(Actual as IMock) is TValue describableSubject)
@@ -83,7 +82,7 @@ public static partial class ThatMockVerify
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using aweXpect.Core;
@@ -20,12 +19,11 @@ public static partial class ThatVerificationResult
 	/// </summary>
 	public static AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
 		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
-				=> new ThenConstraint<T>(expectationBuilder, it, grammars, interactions)),
+		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
+				=> new ThenConstraint<T>(it, grammars, interactions)),
 			subject);
 
 	private sealed class ThenConstraint<T>(
-		ExpectationBuilder expectationBuilder,
 		string it,
 		ExpectationGrammars grammars,
 		Func<T, VerificationResult<T>>[] interactions)
@@ -34,6 +32,8 @@ public static partial class ThatVerificationResult
 	{
 		private List<string>? _expectations;
 		private string? _error;
+		private string? _matchingInteractions;
+		private string? _allInteractions;
 
 		public ConstraintResult IsMetBy(VerificationResult<T> actual)
 		{
@@ -67,12 +67,9 @@ public static partial class ThatVerificationResult
 			Outcome = result ? Outcome.Success : Outcome.Failure;
 			if (!result)
 			{
-				string context = Formatter.Format(((IVerificationResult)actual).Interactions,
+				_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
 					FormattingOptions.MultipleLines);
-				expectationBuilder.UpdateContexts(contexts => contexts.Add(
-					new ResultContext.SyncCallback("Matching Interactions", () => context)));
-				AppendAllInteractions(expectationBuilder,
-					((IVerificationResult<T>)actual).Object as IMock);
+				_allInteractions = FormatAllInteractions(((IVerificationResult<T>)actual).Object as IMock);
 			}
 
 			return this;
@@ -123,7 +120,10 @@ public static partial class ThatVerificationResult
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(" did");
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override void AppendContexts(ResultContextCollector contexts)
+			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    Actual is IVerificationResult<T> verificationResult &&
@@ -133,7 +133,7 @@ public static partial class ThatVerificationResult
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 }

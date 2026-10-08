@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,8 +45,10 @@ public static partial class ThatVerificationResult
 	{
 		private int _count = -1;
 		private string _expectation = "";
+		private string? _matchingInteractions;
+		private string? _allInteractions;
 
-		public async Task<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
 			CancellationToken cancellationToken)
 		{
 			if (options.CancellationToken is not null)
@@ -72,10 +73,7 @@ public static partial class ThatVerificationResult
 				{
 					Outcome = await asyncVerificationResult.VerifyAsync(interactions =>
 					{
-						string interactionsText = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-						expectationBuilder.UpdateContexts(contexts => contexts
-							.Remove("Matching Interactions")
-							.Add(new ResultContext.SyncCallback("Matching Interactions", () => interactionsText)));
+						_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 						_count = interactions.Length;
 						return interactions.Length >= minimum && interactions.Length <= maximum;
 					})
@@ -83,19 +81,14 @@ public static partial class ThatVerificationResult
 						: Outcome.Failure;
 					if (Outcome == Outcome.Failure)
 					{
-						AppendAllInteractions(expectationBuilder,
-							((IVerificationResult<TVerify>)actual).Object as IMock);
+						_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 					}
 					return this;
 				}
 				catch (MockVerificationTimeoutException)
 				{
-					string interactionsText = Formatter.Format(((IVerificationResult)actual).Interactions,
+					_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
 						FormattingOptions.MultipleLines);
-					expectationBuilder.UpdateContexts(contexts => contexts
-						.Remove("Matching Interactions")
-						.Add(new ResultContext.SyncCallback("Matching Interactions",
-							() => interactionsText)));
 					Outcome = Outcome.Failure;
 					return this;
 				}
@@ -106,9 +99,7 @@ public static partial class ThatVerificationResult
 			Actual = actual;
 			Outcome = result.Verify(interactions =>
 			{
-				string context = Formatter.Format(interactions, FormattingOptions.MultipleLines);
-				expectationBuilder.UpdateContexts(contexts => contexts.Add(
-					new ResultContext.SyncCallback("Matching Interactions", () => context)));
+				_matchingInteractions = Formatter.Format(interactions, FormattingOptions.MultipleLines);
 				_count = interactions.Length;
 				return interactions.Length >= minimum && interactions.Length <= maximum;
 			})
@@ -116,8 +107,7 @@ public static partial class ThatVerificationResult
 				: Outcome.Failure;
 			if (Outcome == Outcome.Failure)
 			{
-				AppendAllInteractions(expectationBuilder,
-					((IVerificationResult<TVerify>)actual).Object as IMock);
+				_allInteractions = FormatAllInteractions(((IVerificationResult<TVerify>)actual).Object as IMock);
 			}
 			return this;
 		}
@@ -146,7 +136,10 @@ public static partial class ThatVerificationResult
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(_count.ToAmountString());
 
-		public override bool TryGetValue<TValue>([NotNullWhen(true)] out TValue? value) where TValue : default
+		public override void AppendContexts(ResultContextCollector contexts)
+			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+
+		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
 			    Actual is IVerificationResult<TVerify> verificationResult &&
@@ -156,7 +149,7 @@ public static partial class ThatVerificationResult
 				return true;
 			}
 
-			return base.TryGetValue(out value);
+			return base.TryGetStoredValue(out value);
 		}
 	}
 }

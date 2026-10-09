@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
+using aweXpect.Core.EvaluationContext;
 using aweXpect.Helpers;
 using aweXpect.Options;
 using aweXpect.Results;
@@ -40,12 +41,12 @@ public static partial class ThatVerificationResult
 		string predicateExpression,
 		WithinOptions options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
-			IAsyncConstraint<VerificationResult<TVerify>>
+			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
 		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
-			CancellationToken cancellationToken)
+			IEvaluationContext context, CancellationToken cancellationToken)
 		{
-			await VerifyAsync(actual, expectationBuilder, options);
+			await VerifyAsync(actual, expectationBuilder, options, context, cancellationToken);
 			return this;
 		}
 

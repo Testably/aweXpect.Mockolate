@@ -305,6 +305,87 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
+		public async Task WhenTimeoutIsShorterThanWithin_ShouldFailWithTimeout()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(30.Seconds())
+					.WithTimeout(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but it did not finish within 0:00.050
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("the timeout of the expectation ends the wait before the Within timeout elapses");
+		}
+
+		[Fact]
+		public async Task WhenCanceled_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.Cancel();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
+		public async Task WhenCanceledWhileWaiting_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.CancelAfter(50.Milliseconds());
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(30.Seconds())
+					.WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
 		public async Task WhenEvaluatedForSeveralItems_ShouldOnlyShowInteractionsOfFailingItem()
 		{
 			IMyService sut1 = IMyService.CreateMock();

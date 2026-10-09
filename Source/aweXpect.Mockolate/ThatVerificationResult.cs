@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
+using aweXpect.Core.EvaluationContext;
 using aweXpect.Helpers;
 using aweXpect.Options;
 using Mockolate;
@@ -75,8 +77,13 @@ public static partial class ThatVerificationResult
 			}
 		}
 
+		/// <remarks>
+		///     A cancellation by the caller, or by a timeout of the evaluation that ends the wait early, leaves the outcome
+		///     undecided, so that core reports it like for its own expectations.
+		/// </remarks>
 		protected async ValueTask VerifyAsync(VerificationResult<TVerify>? actual,
-			ExpectationBuilder expectationBuilder, WithinOptions options)
+			ExpectationBuilder expectationBuilder, WithinOptions options, IEvaluationContext context,
+			CancellationToken cancellationToken)
 		{
 			if (!Start(actual))
 			{
@@ -84,18 +91,18 @@ public static partial class ThatVerificationResult
 			}
 
 			VerificationResult<TVerify> verificationResult = actual;
-			if (options.CancellationToken is not null)
+			TimeSpan? timeout = options.Timeout ?? expectationBuilder.Timeout;
+			if (timeout is not null || expectationBuilder.CancellationToken is not null)
 			{
-				verificationResult = verificationResult.WithCancellation(options.CancellationToken.Value);
-			}
+				if (cancellationToken.CanBeCanceled)
+				{
+					verificationResult = verificationResult.WithCancellation(cancellationToken);
+				}
 
-			if (options.Timeout is not null)
-			{
-				verificationResult = verificationResult.Within(options.Timeout.Value);
-			}
-			else if (expectationBuilder.Timeout is not null)
-			{
-				verificationResult = verificationResult.Within(expectationBuilder.Timeout.Value);
+				if (timeout is not null)
+				{
+					verificationResult = verificationResult.Within(timeout.Value);
+				}
 			}
 
 			if (verificationResult is not IAsyncVerificationResult asyncVerificationResult)
@@ -104,15 +111,32 @@ public static partial class ThatVerificationResult
 				return;
 			}
 
+			Stopwatch stopwatch = Stopwatch.StartNew();
 			try
 			{
 				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(Check));
 			}
 			catch (MockVerificationTimeoutException)
 			{
-				Complete(verificationResult, false);
+				if (IsInconclusive(context.Cancellation, timeout, stopwatch.Elapsed))
+				{
+					Outcome = Outcome.Undecided;
+					_allInteractions = GetAllInteractions(verificationResult);
+				}
+				else
+				{
+					Complete(verificationResult, false);
+				}
 			}
 		}
+
+		private static bool IsInconclusive(EvaluationCancellation cancellation, TimeSpan? timeout, TimeSpan waited)
+			=> cancellation.Reason switch
+			{
+				CancellationReason.Caller => true,
+				CancellationReason.Timeout => timeout is null || !cancellation.HasWaitElapsed(timeout.Value, waited),
+				_ => false,
+			};
 
 		private bool Start([NotNullWhen(true)] VerificationResult<TVerify>? actual)
 		{
@@ -168,12 +192,12 @@ public static partial class ThatVerificationResult
 		int expected,
 		WithinOptions options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
-			IAsyncConstraint<VerificationResult<TVerify>>
+			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
 		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
-			CancellationToken cancellationToken)
+			IEvaluationContext context, CancellationToken cancellationToken)
 		{
-			await VerifyAsync(actual, expectationBuilder, options);
+			await VerifyAsync(actual, expectationBuilder, options, context, cancellationToken);
 			return this;
 		}
 
@@ -265,12 +289,12 @@ public static partial class ThatVerificationResult
 		int expected,
 		WithinOptions options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
-			IAsyncConstraint<VerificationResult<TVerify>>
+			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
 		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
-			CancellationToken cancellationToken)
+			IEvaluationContext context, CancellationToken cancellationToken)
 		{
-			await VerifyAsync(actual, expectationBuilder, options);
+			await VerifyAsync(actual, expectationBuilder, options, context, cancellationToken);
 			return this;
 		}
 

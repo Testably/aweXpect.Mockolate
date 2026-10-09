@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Threading;
+using aweXpect.Chronology;
 using Mockolate;
 using Mockolate.Verify;
 using Xunit.Sdk;
@@ -38,6 +41,38 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 			await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 				.Then(m => m.MyMethod(It.Is(2)), m => m.MyMethod(It.Is(3)));
+		}
+
+		[Fact]
+		public async Task Then_WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.CancelAfter(50.Milliseconds());
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			sut.MyMethod(2);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1)).Within(30.Seconds())).Then(m => m.MyMethod(It.Is(2)))
+					.WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1), then
+				             invoked method MyMethod(2) in order,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(2)
+				             ]
+				             """);
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 		}
 
 		[Fact]
@@ -89,6 +124,25 @@ public sealed partial class ThatVerificationResultIs
 				             """).And
 				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
 				.Because("the selector answered nothing, so the expectation fails with its exception");
+		}
+
+		[Fact]
+		public async Task Then_WhenInvokedWhileWaitingForAwaitableSubject_ShouldSucceed()
+		{
+			IMyService sut = IMyService.CreateMock();
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			Task invocation = Task.Run(async () =>
+			{
+				await Task.Delay(50.Milliseconds());
+				sut.MyMethod(1);
+			});
+
+			await That(sut.Mock.Verify.MyMethod(It.Is(1)).Within(30.Seconds())).Then();
+
+			await invocation;
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the verification is repeated when the subject is invoked while waiting");
 		}
 
 		[Fact]
@@ -159,6 +213,33 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
+		public async Task Then_WhenNotInvoked_AwaitableSubject_ShouldFailAfterTimeoutOfSubject()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(2);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1)).Within(50.Milliseconds()))
+					.Then(m => m.MyMethod(It.Is(2)));
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1), then
+				             invoked method MyMethod(2) in order,
+				             but it invoked method MyMethod(1) not at all
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(2)
+				             ]
+				             """);
+		}
+
+		[Fact]
 		public async Task Then_WhenSecondFilterMatchesAtAndAfterEarliest_ShouldAdvanceStrictly()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -192,6 +273,39 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
+			[Fact]
+			public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
+			{
+				IMyService sut = IMyService.CreateMock();
+				using CancellationTokenSource cts = new();
+				cts.CancelAfter(50.Milliseconds());
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(2);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)).Within(30.Seconds()))
+						.DoesNotComplyWith(it => it.Then(m => m.MyMethod(It.Is(2))))
+						.WithCancellation(cts.Token);
+				}
+
+				await That(Act).Throws<InconclusiveException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) not in order,
+					             but it could not be verified, because the evaluation was already canceled
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(2)
+					             ]
+					             """);
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the cancellation ends the wait of the subject before its own timeout elapses");
+			}
+
 			[Fact]
 			public async Task WhenEvaluatedForSeveralItems_ShouldNotShowInteractionsOfPreviousItem()
 			{
@@ -296,6 +410,23 @@ public sealed partial class ThatVerificationResultIs
 					             """).And
 					.Whose(e => e.InnerException, i => i.IsSameAs(exception))
 					.Because("a selector that answered nothing must not be inverted into a success");
+			}
+
+			[Fact]
+			public async Task WhenNotInvoked_AwaitableSubject_ShouldSucceed()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(2);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)).Within(50.Milliseconds()))
+						.DoesNotComplyWith(it => it.Then(m => m.MyMethod(It.Is(2))));
+				}
+
+				await That(Act).DoesNotThrow()
+					.Because("the timeout of the subject fails the verification, which satisfies the negation");
 			}
 
 			[Fact]

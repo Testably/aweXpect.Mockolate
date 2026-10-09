@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
+using aweXpect.Core.EvaluationContext;
 using aweXpect.Helpers;
 using aweXpect.Results;
 using Mockolate;
+using Mockolate.Exceptions;
 using Mockolate.Interactions;
 using Mockolate.Verify;
 
@@ -29,13 +33,14 @@ public static partial class ThatVerificationResult
 		ExpectationGrammars grammars,
 		Func<T, VerificationResult<T>>[] interactions)
 		: ConstraintResult.WithNotNullValue<VerificationResult<T>>(it, grammars),
-			IValueConstraint<VerificationResult<T>>
+			IAsyncContextConstraint<VerificationResult<T>>
 	{
 		private readonly List<string> _expectations = new();
 		private string? _error;
 		private IInteraction[]? _allInteractions;
 
-		public ConstraintResult IsMetBy(VerificationResult<T>? actual)
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<T>? actual,
+			IEvaluationContext context, CancellationToken cancellationToken)
 		{
 			Actual = actual;
 			_expectations.Clear();
@@ -46,38 +51,61 @@ public static partial class ThatVerificationResult
 				return this;
 			}
 
-			bool result = true;
 			T verify = ((IVerificationResult<T>)actual).Object;
 			IVerificationResult verificationResult = actual;
-			IInteraction[] snapshot = verificationResult.Interactions.ToArray();
-			Dictionary<IInteraction, int> positions = new(snapshot.Length);
-			for (int i = 0; i < snapshot.Length; i++)
-			{
-				positions[snapshot[i]] = i;
-			}
-
+			IInteraction[] snapshot = [];
+			Dictionary<IInteraction, int> positions = new();
 			int after = -1;
-			foreach (Func<T, VerificationResult<T>> check in interactions)
+			bool isUndecided = false;
+			bool result;
+			_expectations.Add(verificationResult.Expectation);
+			if (actual is IAsyncVerificationResult asyncVerificationResult)
 			{
-				IVerificationResult currentVerificationResult = verificationResult;
-				_expectations.Add(currentVerificationResult.Expectation);
-				if (!verificationResult.Verify(i => VerifyInteractions(i, currentVerificationResult)))
+				try
 				{
+					result = await asyncVerificationResult.VerifyAsync(VerifyFirstInteractions, cancellationToken);
+				}
+				catch (Exception exception) when (exception is MockVerificationTimeoutException
+					                                  or OperationCanceledException)
+				{
+					isUndecided = context.Cancellation.Reason is CancellationReason.Caller or CancellationReason.Timeout;
 					result = false;
 				}
-
-				verificationResult = UserCode.Invoke(check, verify, "the interaction selector");
+			}
+			else
+			{
+				result = verificationResult.Verify(VerifyFirstInteractions);
 			}
 
-			_expectations.Add(verificationResult.Expectation);
-			result = verificationResult.Verify(i => VerifyInteractions(i, verificationResult)) && result;
-			Outcome = result ? Outcome.Success : Outcome.Failure;
-			if (!result)
+			foreach (Func<T, VerificationResult<T>> check in interactions)
+			{
+				IVerificationResult currentVerificationResult = UserCode.Invoke(check, verify, "the interaction selector");
+				_expectations.Add(currentVerificationResult.Expectation);
+				result = currentVerificationResult.Verify(i => VerifyInteractions(i, currentVerificationResult)) &&
+				         result;
+			}
+
+			Outcome = isUndecided ? Outcome.Undecided : result ? Outcome.Success : Outcome.Failure;
+			if (Outcome != Outcome.Success)
 			{
 				_allInteractions = snapshot;
 			}
 
 			return this;
+
+			bool VerifyFirstInteractions(IInteraction[] filteredInteractions)
+			{
+				snapshot = verificationResult.Interactions.ToArray();
+				positions = new Dictionary<IInteraction, int>(snapshot.Length);
+				for (int i = 0; i < snapshot.Length; i++)
+				{
+					positions[snapshot[i]] = i;
+				}
+
+				after = -1;
+				_error = null;
+				return VerifyInteractions(filteredInteractions, verificationResult);
+			}
 
 			bool VerifyInteractions(IInteraction[] filteredInteractions, IVerificationResult currentVerificationResult)
 			{

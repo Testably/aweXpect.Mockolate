@@ -94,18 +94,10 @@ public static partial class ThatVerificationResult
 
 			VerificationResult<TVerify> verificationResult = actual;
 			TimeSpan? timeout = options is null ? null : options.Timeout ?? expectationBuilder.Timeout;
-			if (timeout is not null || (options is not null && expectationBuilder.CancellationToken is not null))
+			if ((timeout is not null || (options is not null && expectationBuilder.CancellationToken is not null)) &&
+			    verificationResult is not IAsyncVerificationResult)
 			{
-				// An awaitable subject of the caller would keep the token after the evaluation released it.
-				if (cancellationToken.CanBeCanceled && verificationResult is not IAsyncVerificationResult)
-				{
-					verificationResult = verificationResult.WithCancellation(cancellationToken);
-				}
-
-				if (timeout is not null)
-				{
-					verificationResult = verificationResult.Within(timeout.Value);
-				}
+				verificationResult = verificationResult.WithCancellation(cancellationToken);
 			}
 
 			if (verificationResult is not IAsyncVerificationResult asyncVerificationResult)
@@ -114,12 +106,21 @@ public static partial class ThatVerificationResult
 				return;
 			}
 
+			// An awaitable subject of the caller would keep a timeout or token that is set on it,
+			// so they only limit the verification itself.
+			using CancellationTokenSource waitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			if (timeout is not null)
+			{
+				waitCts.CancelAfter(timeout.Value);
+			}
+
 			long startTimestamp = context.GetTimestamp();
 			try
 			{
-				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(Check));
+				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(Check, waitCts.Token));
 			}
-			catch (MockVerificationTimeoutException)
+			catch (Exception exception) when (exception is MockVerificationTimeoutException
+				                                  or OperationCanceledException)
 			{
 				if (IsInconclusive(context.Cancellation, timeout, context.GetElapsedTime(startTimestamp)))
 				{

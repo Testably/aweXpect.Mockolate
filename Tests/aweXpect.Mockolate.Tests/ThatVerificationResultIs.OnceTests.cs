@@ -242,7 +242,92 @@ public sealed partial class ThatVerificationResultIs
 
 				             Matching Interactions:
 				             []
+
+				             All Interactions:
+				             []
 				             """);
+		}
+
+		[Fact]
+		public async Task WhenOtherMethodsAreInvoked_Within_ShouldShowMatchingAndAllInteractions()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(2, false);
+			sut.MyMethod(3, true);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but never found it
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(2, False),
+				               invoke method MyMethod(3, True)
+				             ]
+				             """);
+		}
+
+		[Fact]
+		public async Task WhenNotInvoked_WithTimeout_ShouldFailWithDescriptiveMessage()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithTimeout(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but never found it
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("the timeout of the expectation is the time to wait for the interaction");
+		}
+
+		[Fact]
+		public async Task WhenEvaluatedForSeveralItems_ShouldOnlyShowInteractionsOfFailingItem()
+		{
+			IMyService sut1 = IMyService.CreateMock();
+			IMyService sut2 = IMyService.CreateMock();
+			sut1.MyMethod(1);
+			sut1.MyMethod(1);
+			sut1.MyMethod(99);
+			sut2.MyMethod(1);
+
+			async Task Act()
+			{
+				await That(new[] { sut1.Mock.Verify.MyMethod(It.Is(1)), sut2.Mock.Verify.MyMethod(It.Is(1)), })
+					.All().ComplyWith(x => x.DoesNotComplyWith(y => y.Once()));
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             *
+				             Matching Interactions (item [1]):
+				             [
+				               invoke method MyMethod(1)
+				             ]
+				             """).AsWildcard()
+				.Because("the interactions of the first mock must not be shown for the second item");
 		}
 	}
 }

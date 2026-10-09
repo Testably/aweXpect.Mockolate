@@ -242,6 +242,7 @@ public sealed partial class ThatVerificationResultIs
 			sut.MyMethod(1, true);
 			sut.MyMethod(2, true);
 			sut.MyMethod(3, true);
+			sut.MyMethod(4, false);
 
 			async Task Act()
 			{
@@ -260,6 +261,14 @@ public sealed partial class ThatVerificationResultIs
 				               invoke method MyMethod(1, True),
 				               invoke method MyMethod(2, True),
 				               invoke method MyMethod(3, True)
+				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, True),
+				               invoke method MyMethod(2, True),
+				               invoke method MyMethod(3, True),
+				               invoke method MyMethod(4, False)
 				             ]
 				             """);
 		}

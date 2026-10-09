@@ -32,13 +32,14 @@ public static partial class ThatVerificationResult
 	{
 		private List<string>? _expectations;
 		private string? _error;
-		private string? _matchingInteractions;
-		private string? _allInteractions;
+		private IInteraction[]? _allInteractions;
 
 		public ConstraintResult IsMetBy(VerificationResult<T> actual)
 		{
 			Actual = actual;
 			_expectations = new List<string>();
+			_error = null;
+			_allInteractions = null;
 			bool result = true;
 			T verify = ((IVerificationResult<T>)actual).Object;
 			IVerificationResult verificationResult = actual;
@@ -67,9 +68,7 @@ public static partial class ThatVerificationResult
 			Outcome = result ? Outcome.Success : Outcome.Failure;
 			if (!result)
 			{
-				_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
-					FormattingOptions.MultipleLines);
-				_allInteractions = FormatAllInteractions(((IVerificationResult<T>)actual).Object as IMock);
+				_allInteractions = snapshot;
 			}
 
 			return this;
@@ -120,8 +119,12 @@ public static partial class ThatVerificationResult
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(" did");
 
+		/// <remarks>
+		///     The order is verified across several interactions, so the matching interactions of a single one would not
+		///     explain the failure, while all interactions show their order.
+		/// </remarks>
 		public override void AppendContexts(ResultContextCollector contexts)
-			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+			=> AppendInteractionContexts(contexts, null, _allInteractions);
 
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{

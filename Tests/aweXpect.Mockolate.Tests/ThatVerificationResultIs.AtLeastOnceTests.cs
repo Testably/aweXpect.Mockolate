@@ -209,6 +209,9 @@ public sealed partial class ThatVerificationResultIs
 				             but never found it
 
 				             Matching Interactions:
+				             []
+
+				             All Interactions:
 				             [
 				               invoke method MyMethod(1, True),
 				               invoke method MyMethod(2, True)

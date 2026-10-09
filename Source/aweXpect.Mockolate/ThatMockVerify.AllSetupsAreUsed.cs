@@ -16,20 +16,21 @@ public static partial class ThatMockVerify
 	/// <summary>
 	///     Verifies that all setups on the mock have been used.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrResult<IMockVerify<TVerify>, IThat<IMockVerify<TVerify>>>
 		AllSetupsAreUsed<TVerify>(
 			this IThat<IMockVerify<TVerify>> subject)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
+		=> new(subject.Get().ExpectationBuilder.AddConstraint((it, grammars)
 				=> new AllSetupsAreUsedConstraint<TVerify>(it, grammars)),
 			subject);
 
 	private sealed class AllSetupsAreUsedConstraint<TVerify>(
 		string it,
 		ExpectationGrammars grammars)
-		: ConstraintResult.WithValue<IMockVerify<TVerify>>(it, grammars),
+		: ConstraintResult.WithNotNullValue<IMockVerify<TVerify>>(it, grammars),
 			IValueConstraint<IMockVerify<TVerify>>
 	{
-		public ConstraintResult IsMetBy(IMockVerify<TVerify> actual)
+		public ConstraintResult IsMetBy(IMockVerify<TVerify>? actual)
 		{
 			Actual = actual;
 			Outcome = actual is IMock mock &&

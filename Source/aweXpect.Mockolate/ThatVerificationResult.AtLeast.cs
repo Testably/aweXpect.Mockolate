@@ -11,6 +11,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened at least the number of <paramref name="times" />.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>
 		AtLeast<TVerify>(this IThat<VerificationResult<TVerify>> subject, Times times)
 	{

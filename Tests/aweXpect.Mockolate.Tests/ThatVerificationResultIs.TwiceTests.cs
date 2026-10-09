@@ -240,10 +240,15 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(3, true) exactly twice,
+				             invoked method MyMethod(3, true) exactly twice within 0:00.050,
 				             but found it only once
 
 				             Matching Interactions:
+				             [
+				               invoke method MyMethod(3, True)
+				             ]
+
+				             All Interactions:
 				             [
 				               invoke method MyMethod(1, True),
 				               invoke method MyMethod(2, True),

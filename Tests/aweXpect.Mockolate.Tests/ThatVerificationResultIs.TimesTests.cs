@@ -212,6 +212,7 @@ public sealed partial class ThatVerificationResultIs
 			sut.MyMethod(2, true);
 			sut.MyMethod(3, true);
 			sut.MyMethod(4, true);
+			sut.MyMethod(5, false);
 
 			async Task Act()
 			{
@@ -222,7 +223,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4,
+				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4 within 0:00.050,
 				             but found it 4 times
 
 				             Matching Interactions:
@@ -231,6 +232,15 @@ public sealed partial class ThatVerificationResultIs
 				               invoke method MyMethod(2, True),
 				               invoke method MyMethod(3, True),
 				               invoke method MyMethod(4, True)
+				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, True),
+				               invoke method MyMethod(2, True),
+				               invoke method MyMethod(3, True),
+				               invoke method MyMethod(4, True),
+				               invoke method MyMethod(5, False)
 				             ]
 				             """);
 		}

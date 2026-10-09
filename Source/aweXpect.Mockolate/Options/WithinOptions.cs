@@ -1,11 +1,9 @@
 using System;
-using System.Threading;
 
 namespace aweXpect.Options;
 
 /// <summary>
-///     The options for a verification result which allows specifying a timeout and/or cancellation token for the
-///     verification.
+///     The options for a verification result which allows specifying a timeout for the verification.
 /// </summary>
 public class WithinOptions
 {
@@ -14,8 +12,12 @@ public class WithinOptions
 	/// </summary>
 	public TimeSpan? Timeout { get; set; }
 
-	/// <summary>
-	///     The cancellation token that is used to cancel the verification.
-	/// </summary>
-	public CancellationToken? CancellationToken { get; set; }
+	/// <inheritdoc cref="object.ToString()" />
+	/// <remarks>
+	///     An infinite timeout is omitted, because it does not add any information to the expectation.
+	/// </remarks>
+	public override string ToString()
+		=> Timeout is { } timeout && timeout != System.Threading.Timeout.InfiniteTimeSpan
+			? $" within {Formatter.Format(timeout)}"
+			: "";
 }

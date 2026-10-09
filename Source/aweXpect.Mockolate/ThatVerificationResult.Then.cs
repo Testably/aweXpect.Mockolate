@@ -17,28 +17,35 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the <paramref name="interactions" /> happen after the current interaction in the given order.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
 		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
-				=> new ThenConstraint<T>(it, grammars, interactions)),
+		=> new(subject.Get().ExpectationBuilder.AddConstraint(interactions,
+				static (interactions, it, grammars) => new ThenConstraint<T>(it, grammars, interactions)),
 			subject);
 
 	private sealed class ThenConstraint<T>(
 		string it,
 		ExpectationGrammars grammars,
 		Func<T, VerificationResult<T>>[] interactions)
-		: ConstraintResult.WithValue<VerificationResult<T>>(it, grammars),
+		: ConstraintResult.WithNotNullValue<VerificationResult<T>>(it, grammars),
 			IValueConstraint<VerificationResult<T>>
 	{
-		private List<string>? _expectations;
+		private readonly List<string> _expectations = new();
 		private string? _error;
-		private string? _matchingInteractions;
-		private string? _allInteractions;
+		private IInteraction[]? _allInteractions;
 
-		public ConstraintResult IsMetBy(VerificationResult<T> actual)
+		public ConstraintResult IsMetBy(VerificationResult<T>? actual)
 		{
 			Actual = actual;
-			_expectations = new List<string>();
+			_expectations.Clear();
+			_error = null;
+			_allInteractions = null;
+			if (actual is null)
+			{
+				return this;
+			}
+
 			bool result = true;
 			T verify = ((IVerificationResult<T>)actual).Object;
 			IVerificationResult verificationResult = actual;
@@ -67,61 +74,76 @@ public static partial class ThatVerificationResult
 			Outcome = result ? Outcome.Success : Outcome.Failure;
 			if (!result)
 			{
-				_matchingInteractions = Formatter.Format(((IVerificationResult)actual).Interactions,
-					FormattingOptions.MultipleLines);
-				_allInteractions = FormatAllInteractions(((IVerificationResult<T>)actual).Object as IMock);
+				_allInteractions = snapshot;
 			}
 
 			return this;
 
 			bool VerifyInteractions(IInteraction[] filteredInteractions, IVerificationResult currentVerificationResult)
 			{
-				int bestPosition = int.MaxValue;
-				IInteraction? firstInteraction = null;
-				foreach (IInteraction candidate in filteredInteractions)
+				after = FirstPositionAfter(filteredInteractions, positions, after);
+				if (after == int.MaxValue)
 				{
-					if (positions.TryGetValue(candidate, out int position) &&
-					    position > after &&
-					    position < bestPosition)
-					{
-						bestPosition = position;
-						firstInteraction = candidate;
-					}
-				}
-
-				bool hasInteractionAfter = firstInteraction is not null;
-				after = hasInteractionAfter ? bestPosition : int.MaxValue;
-				if (!hasInteractionAfter && _error is null)
-				{
-					_error = filteredInteractions.Length > 0
+					_error ??= filteredInteractions.Length > 0
 						? $"{currentVerificationResult.Expectation} too early"
 						: $"{currentVerificationResult.Expectation} not at all";
+					return false;
 				}
 
-				return hasInteractionAfter;
+				return true;
 			}
 		}
 
-		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
+		/// <summary>
+		///     Returns the first position of the <paramref name="interactions" /> after the given position,
+		///     or <see cref="int.MaxValue" /> if there is none.
+		/// </summary>
+		private static int FirstPositionAfter(IInteraction[] interactions,
+			Dictionary<IInteraction, int> positions, int after)
 		{
-			string separator = $", then{Environment.NewLine}{indentation}";
-			stringBuilder.Append(string.Join(separator, _expectations!)).Append(" in order");
+			int bestPosition = int.MaxValue;
+			foreach (IInteraction candidate in interactions)
+			{
+				if (positions.TryGetValue(candidate, out int position) &&
+				    position > after &&
+				    position < bestPosition)
+				{
+					bestPosition = position;
+				}
+			}
+
+			return bestPosition;
 		}
+
+		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
+			=> AppendExpectations(stringBuilder, indentation).Append(" in order");
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(' ').Append(_error);
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
-		{
-			string separator = $", then{Environment.NewLine}{indentation}";
-			stringBuilder.Append(string.Join(separator, _expectations!)).Append(" not in order");
-		}
+			=> AppendExpectations(stringBuilder, indentation).Append(" not in order");
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(" did");
 
+		private StringBuilder AppendExpectations(StringBuilder stringBuilder, string? indentation)
+		{
+			if (_expectations.Count == 0)
+			{
+				return stringBuilder.Append("had the interactions");
+			}
+
+			string separator = $", then{Environment.NewLine}{indentation}";
+			return stringBuilder.Append(string.Join(separator, _expectations));
+		}
+
+		/// <remarks>
+		///     The order is verified across several interactions, so the matching interactions of a single one would not
+		///     explain the failure, while all interactions show their order.
+		/// </remarks>
 		public override void AppendContexts(ResultContextCollector contexts)
-			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+			=> AppendInteractionContexts(contexts, null, _allInteractions);
 
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{

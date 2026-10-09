@@ -55,13 +55,12 @@ await That(sut.Mock.Verify.MyMethod())
     .Within(TimeSpan.FromSeconds(1));
 ```
 
-Instead of a fixed time span, you can also provide a `CancellationToken` to limit how long the verification should wait
-for the expected interactions:
+Instead of a fixed time span, you can also provide a `CancellationToken` to wait for the expected interactions until it
+is canceled. Like for all aweXpect expectations, a cancellation leaves the expectation inconclusive instead of failing
+it, so use `Within` to limit how long the verification should wait:
 
 ```csharp
-var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-
-// Verifies that MyMethod was called at least once within 1 second
+// Verifies that MyMethod was called at least once, unless the token is canceled before
 await That(sut.Mock.Verify.MyMethod())
     .AtLeastOnce()
     .WithCancellation(token);

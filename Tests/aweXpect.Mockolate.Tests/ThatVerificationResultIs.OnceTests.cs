@@ -1,6 +1,7 @@
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
+using Mockolate.Verify;
 using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
@@ -237,12 +238,228 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(It.IsAny<int>(), true) exactly once,
+				             invoked method MyMethod(It.IsAny<int>(), true) exactly once within 0:00.050,
 				             but never found it
 
 				             Matching Interactions:
 				             []
+
+				             All Interactions:
+				             []
 				             """);
+		}
+
+		[Fact]
+		public async Task WhenOtherMethodsAreInvoked_Within_ShouldShowMatchingAndAllInteractions()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(2, false);
+			sut.MyMethod(3, true);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:00.050,
+				             but never found it
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(2, False),
+				               invoke method MyMethod(3, True)
+				             ]
+				             """);
+		}
+
+		[Fact]
+		public async Task WhenNotInvoked_WithTimeout_ShouldFailWithDescriptiveMessage()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithTimeout(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but never found it
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("the timeout of the expectation is the time to wait for the interaction");
+		}
+
+		[Fact]
+		public async Task WhenTimeoutIsShorterThanWithin_ShouldFailWithTimeout()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(30.Seconds())
+					.WithTimeout(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:30,
+				             but it did not finish within 0:00.050
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("the timeout of the expectation ends the wait before the Within timeout elapses");
+		}
+
+		[Fact]
+		public async Task WhenCanceled_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.Cancel();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
+		public async Task WhenCanceledWhileWaiting_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.CancelAfter(50.Milliseconds());
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(30.Seconds())
+					.WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:30,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
+		public async Task WhenWithinFollowsBecause_ShouldApplyWithin()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			Task backgroundTask = Task.Delay(50).ContinueWith(_ => sut.MyMethod(1, false));
+
+			await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once()
+				.Because("it is invoked in the background").Within(30.Seconds());
+
+			await backgroundTask;
+		}
+
+		[Fact]
+		public async Task WhenEvaluatedForSeveralItems_ShouldOnlyShowInteractionsOfFailingItem()
+		{
+			IMyService sut1 = IMyService.CreateMock();
+			IMyService sut2 = IMyService.CreateMock();
+			sut1.MyMethod(1);
+			sut1.MyMethod(1);
+			sut1.MyMethod(99);
+			sut2.MyMethod(1);
+
+			async Task Act()
+			{
+				await That(new[] { sut1.Mock.Verify.MyMethod(It.Is(1)), sut2.Mock.Verify.MyMethod(It.Is(1)), })
+					.All().ComplyWith(x => x.DoesNotComplyWith(y => y.Once()));
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             *
+				             Matching Interactions (item [1]):
+				             [
+				               invoke method MyMethod(1)
+				             ]
+				             """).AsWildcard()
+				.Because("the interactions of the first mock must not be shown for the second item");
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).Once();
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interaction exactly once,
+				             but it was <null>
+				             """);
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_Negated_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).DoesNotComplyWith(it => it.Once());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interaction not exactly once,
+				             but it was <null>
+				             """)
+				.Because("a null subject cannot be verified, so the negation fails as well");
 		}
 	}
 }

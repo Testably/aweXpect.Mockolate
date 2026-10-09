@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
@@ -77,6 +78,39 @@ public sealed partial class ThatVerificationResultIs
 				             ]
 				             """)
 				.Because("further interactions cannot satisfy Never, so the cancellation token must not make it wait");
+		}
+
+		[Fact]
+		public async Task WhenInvoked_WithTimeout_ShouldFailWithoutWaiting()
+		{
+			IMyService sut = IMyService.CreateMock();
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			sut.MyMethod(1, false);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never().WithTimeout(30.Seconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             never invoked method MyMethod(1, false),
+				             but found it once
+
+				             Matching Interactions:
+				             [
+				               invoke method MyMethod(1, False)
+				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, False)
+				             ]
+				             """);
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("further interactions cannot satisfy Never, so the timeout must not make it wait");
 		}
 
 		[Fact]

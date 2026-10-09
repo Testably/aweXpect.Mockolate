@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -81,8 +80,8 @@ public static partial class ThatVerificationResult
 		///     A cancellation by the caller, or by a timeout of the evaluation that ends the wait early, leaves the outcome
 		///     undecided, so that core reports it like for its own expectations.
 		///     <para />
-		///     Without <paramref name="options" />, e.g. for <c>Never</c>, which further interactions cannot satisfy, a
-		///     cancellation alone does not make the verification wait.
+		///     Without <paramref name="options" />, e.g. for <c>Never</c>, which further interactions cannot satisfy,
+		///     neither a timeout nor a cancellation makes the verification wait.
 		/// </remarks>
 		protected async ValueTask VerifyAsync(VerificationResult<TVerify>? actual,
 			ExpectationBuilder expectationBuilder, WithinOptions? options, IEvaluationContext context,
@@ -94,7 +93,7 @@ public static partial class ThatVerificationResult
 			}
 
 			VerificationResult<TVerify> verificationResult = actual;
-			TimeSpan? timeout = options?.Timeout ?? expectationBuilder.Timeout;
+			TimeSpan? timeout = options is null ? null : options.Timeout ?? expectationBuilder.Timeout;
 			if (timeout is not null || (options is not null && expectationBuilder.CancellationToken is not null))
 			{
 				// An awaitable subject of the caller would keep the token after the evaluation released it.
@@ -115,14 +114,14 @@ public static partial class ThatVerificationResult
 				return;
 			}
 
-			Stopwatch stopwatch = Stopwatch.StartNew();
+			long startTimestamp = context.GetTimestamp();
 			try
 			{
 				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(Check));
 			}
 			catch (MockVerificationTimeoutException)
 			{
-				if (IsInconclusive(context.Cancellation, timeout, stopwatch.Elapsed))
+				if (IsInconclusive(context.Cancellation, timeout, context.GetElapsedTime(startTimestamp)))
 				{
 					Outcome = Outcome.Undecided;
 					_allInteractions = GetAllInteractions(verificationResult);

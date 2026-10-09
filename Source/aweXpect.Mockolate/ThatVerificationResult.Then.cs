@@ -81,30 +81,38 @@ public static partial class ThatVerificationResult
 
 			bool VerifyInteractions(IInteraction[] filteredInteractions, IVerificationResult currentVerificationResult)
 			{
-				int bestPosition = int.MaxValue;
-				IInteraction? firstInteraction = null;
-				foreach (IInteraction candidate in filteredInteractions)
+				after = FirstPositionAfter(filteredInteractions, positions, after);
+				if (after == int.MaxValue)
 				{
-					if (positions.TryGetValue(candidate, out int position) &&
-					    position > after &&
-					    position < bestPosition)
-					{
-						bestPosition = position;
-						firstInteraction = candidate;
-					}
-				}
-
-				bool hasInteractionAfter = firstInteraction is not null;
-				after = hasInteractionAfter ? bestPosition : int.MaxValue;
-				if (!hasInteractionAfter && _error is null)
-				{
-					_error = filteredInteractions.Length > 0
+					_error ??= filteredInteractions.Length > 0
 						? $"{currentVerificationResult.Expectation} too early"
 						: $"{currentVerificationResult.Expectation} not at all";
+					return false;
 				}
 
-				return hasInteractionAfter;
+				return true;
 			}
+		}
+
+		/// <summary>
+		///     Returns the first position of the <paramref name="interactions" /> after the given position,
+		///     or <see cref="int.MaxValue" /> if there is none.
+		/// </summary>
+		private static int FirstPositionAfter(IInteraction[] interactions,
+			Dictionary<IInteraction, int> positions, int after)
+		{
+			int bestPosition = int.MaxValue;
+			foreach (IInteraction candidate in interactions)
+			{
+				if (positions.TryGetValue(candidate, out int position) &&
+				    position > after &&
+				    position < bestPosition)
+				{
+					bestPosition = position;
+				}
+			}
+
+			return bestPosition;
 		}
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)

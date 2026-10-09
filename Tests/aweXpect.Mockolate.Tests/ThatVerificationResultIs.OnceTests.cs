@@ -238,7 +238,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(It.IsAny<int>(), true) exactly once,
+				             invoked method MyMethod(It.IsAny<int>(), true) exactly once within 0:00.050,
 				             but never found it
 
 				             Matching Interactions:
@@ -265,7 +265,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(1, false) exactly once,
+				             invoked method MyMethod(1, false) exactly once within 0:00.050,
 				             but never found it
 
 				             Matching Interactions:
@@ -318,7 +318,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(1, false) exactly once,
+				             invoked method MyMethod(1, false) exactly once within 0:30,
 				             but it did not finish within 0:00.050
 
 				             Matching Interactions:
@@ -373,7 +373,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<InconclusiveException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(1, false) exactly once,
+				             invoked method MyMethod(1, false) exactly once within 0:30,
 				             but it could not be verified, because the evaluation was already canceled
 
 				             Matching Interactions:
@@ -383,6 +383,19 @@ public sealed partial class ThatVerificationResultIs
 				             []
 				             """)
 				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
+		public async Task WhenWithinFollowsBecause_ShouldApplyWithin()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			Task backgroundTask = Task.Delay(50).ContinueWith(_ => sut.MyMethod(1, false));
+
+			await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once()
+				.Because("it is invoked in the background").Within(30.Seconds());
+
+			await backgroundTask;
 		}
 
 		[Fact]

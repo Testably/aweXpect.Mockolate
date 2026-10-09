@@ -213,6 +213,8 @@ public static partial class ThatVerificationResult
 			{
 				stringBuilder.Append(Expectation).Append(" exactly ").Append(expected.ToAmountString());
 			}
+
+			stringBuilder.Append(options);
 		}
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
@@ -239,6 +241,8 @@ public static partial class ThatVerificationResult
 			{
 				stringBuilder.Append(Expectation).Append(" not exactly ").Append(expected.ToAmountString());
 			}
+
+			stringBuilder.Append(options);
 		}
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
@@ -301,7 +305,8 @@ public static partial class ThatVerificationResult
 		protected override bool IsMet(int count) => count >= expected;
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(Expectation).Append(" at least ").Append(expected.ToAmountString());
+			=> stringBuilder.Append(Expectation).Append(" at least ").Append(expected.ToAmountString())
+				.Append(options);
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 		{
@@ -316,7 +321,8 @@ public static partial class ThatVerificationResult
 		}
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(Expectation).Append(" less than ").Append(expected.ToAmountString());
+			=> stringBuilder.Append(Expectation).Append(" less than ").Append(expected.ToAmountString())
+				.Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());

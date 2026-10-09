@@ -21,22 +21,16 @@ namespace aweXpect.Options
     public class WithinOptions
     {
         public WithinOptions() { }
-        public System.Threading.CancellationToken? CancellationToken { get; set; }
         public System.TimeSpan? Timeout { get; set; }
+        public override string ToString() { }
     }
 }
 namespace aweXpect.Results
 {
-    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrWithinResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
+    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
     {
         public AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
-    }
-    public class AndOrWithinResult<TType, TThat, TSelf> : aweXpect.Results.AndOrResult<TType, TThat>
-        where TSelf : aweXpect.Results.AndOrWithinResult<TType, TThat, TSelf>
-    {
-        protected AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
-        public TSelf WithCancellation(System.Threading.CancellationToken cancellationToken) { }
-        public TSelf Within(System.TimeSpan timeout) { }
+        public aweXpect.Results.AndOrWithinResult<TType, TThat> Within(System.TimeSpan timeout) { }
     }
 }
 namespace aweXpect

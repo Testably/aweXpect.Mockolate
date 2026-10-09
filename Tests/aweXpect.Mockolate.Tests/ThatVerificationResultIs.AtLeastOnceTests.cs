@@ -205,7 +205,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(1, false) at least once,
+				             invoked method MyMethod(1, false) at least once within 0:00.050,
 				             but never found it
 
 				             Matching Interactions:

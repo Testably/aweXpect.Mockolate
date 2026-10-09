@@ -223,7 +223,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4,
+				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4 within 0:00.050,
 				             but found it 4 times
 
 				             Matching Interactions:

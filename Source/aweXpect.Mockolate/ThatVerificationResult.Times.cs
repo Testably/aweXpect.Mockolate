@@ -53,7 +53,8 @@ public static partial class ThatVerificationResult
 		protected override bool IsMet(int count) => predicate(count);
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append(Expectation).Append(" according to the predicate ").Append(predicateExpression);
+			=> stringBuilder.Append(Expectation).Append(" according to the predicate ").Append(predicateExpression)
+				.Append(options);
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 		{
@@ -69,7 +70,7 @@ public static partial class ThatVerificationResult
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(Expectation).Append(" not according to the predicate ")
-				.Append(predicateExpression);
+				.Append(predicateExpression).Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> AppendNormalResult(stringBuilder, indentation);

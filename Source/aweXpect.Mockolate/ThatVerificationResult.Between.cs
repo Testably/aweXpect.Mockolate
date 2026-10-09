@@ -54,7 +54,7 @@ public static partial class ThatVerificationResult
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(Expectation).Append(" between ").Append(minimum).Append(" and ").Append(maximum)
-				.Append(" times");
+				.Append(" times").Append(options);
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 		{
@@ -71,7 +71,7 @@ public static partial class ThatVerificationResult
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(Expectation).Append(" not between ").Append(minimum).Append(" and ")
-				.Append(maximum).Append(" times");
+				.Append(maximum).Append(" times").Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());

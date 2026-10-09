@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
@@ -250,6 +251,48 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
+		public async Task WhenNotInvoked_WithinOnAwaitableSubject_ShouldKeepTimeoutOfSubject()
+		{
+			IMyService sut = IMyService.CreateMock();
+			var subject = sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(30.Seconds());
+
+			async Task Act()
+			{
+				await That(subject).Once().Within(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>();
+
+			Task backgroundTask = Task.Delay(500).ContinueWith(_ => sut.MyMethod(1, false));
+
+			void VerifyWithSubject()
+			{
+				subject.Once();
+			}
+
+			await That(VerifyWithSubject).DoesNotThrow()
+				.Because("the subject still waits for its own timeout");
+			await backgroundTask;
+		}
+
+		[Fact]
+		public async Task WhenNotInvoked_WithinOnAwaitableSubjectWithShorterTimeout_ShouldFailAfterTimeoutOfSubject()
+		{
+			IMyService sut = IMyService.CreateMock();
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(50.Milliseconds())).Once()
+					.Within(30.Seconds());
+			}
+
+			await That(Act).Throws<XunitException>();
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the shorter timeout of the subject ends the wait");
+		}
+
+		[Fact]
 		public async Task WhenOtherMethodsAreInvoked_Within_ShouldShowMatchingAndAllInteractions()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -383,6 +426,36 @@ public sealed partial class ThatVerificationResultIs
 				             []
 				             """)
 				.Because("a cancellation by the caller does not decide whether the interaction happened");
+		}
+
+		[Fact]
+		public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.CancelAfter(50.Milliseconds());
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(30.Seconds())).Once()
+					.WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """);
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 		}
 
 		[Fact]

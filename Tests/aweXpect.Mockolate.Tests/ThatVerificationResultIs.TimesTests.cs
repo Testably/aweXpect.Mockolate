@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
@@ -245,6 +246,64 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
+		[Fact]
+		public async Task WhenPredicateThrows_ShouldFail()
+		{
+			InvalidOperationException exception = new("predicate failed");
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(1, false);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(_ => throw exception);
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+				             invoked method MyMethod(1, false) according to the predicate _ => throw exception,
+				             but the predicate did throw an InvalidOperationException:
+				               predicate failed
+
+				             Matching Interactions:
+				             [
+				               invoke method MyMethod(1, False)
+				             ]
+				             """).And
+				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+				.Because("the predicate answered nothing, so the expectation fails with its exception");
+		}
+
+		[Fact]
+		public async Task WhenPredicateThrows_Within_ShouldFailWithoutWaiting()
+		{
+			InvalidOperationException exception = new("predicate failed");
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(_ => throw exception)
+					.Within(30.Seconds());
+			}
+
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+				             invoked method MyMethod(1, false) according to the predicate _ => throw exception within 0:30,
+				             but the predicate did throw an InvalidOperationException:
+				               predicate failed
+
+				             Matching Interactions:
+				             []
+				             """).And
+				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+				.Because("further interactions cannot make a throwing predicate answer");
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the verification must not wait for further interactions after the predicate threw");
+		}
+
 		public sealed class NegatedTests
 		{
 			[Fact]
@@ -289,6 +348,36 @@ public sealed partial class ThatVerificationResultIs
 					               invoke method MyMethod(1, False)
 					             ]
 					             """);
+			}
+
+			[Fact]
+			public async Task WhenPredicateThrows_ShouldFail()
+			{
+				InvalidOperationException exception = new("predicate failed");
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(1, false);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)))
+						.DoesNotComplyWith(it => it.Times(_ => throw exception));
+				}
+
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+					             invoked method MyMethod(1, false) not according to the predicate _ => throw exception,
+					             but the predicate did throw an InvalidOperationException:
+					               predicate failed
+
+					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False)
+					             ]
+					             """).And
+					.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+					.Because("a predicate that answered nothing must not be inverted into a success");
 			}
 		}
 	}

@@ -50,7 +50,7 @@ public static partial class ThatVerificationResult
 			return this;
 		}
 
-		protected override bool IsMet(int count) => predicate(count);
+		protected override bool IsMet(int count) => UserCode.Invoke(predicate, count, "the predicate");
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(Expectation).Append(" according to the predicate ").Append(predicateExpression)

@@ -65,6 +65,33 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
+		public async Task Then_WhenInteractionSelectorThrows_ShouldFail()
+		{
+			InvalidOperationException exception = new("selector failed");
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(1);
+			sut.MyMethod(2);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+					.Then(m => m.MyMethod(It.Is(2)), _ => throw exception);
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that sut.Mock.Verify.MyMethod(It.Is(1))
+				             invoked method MyMethod(1), then
+				             invoked method MyMethod(2) in order,
+				             but the interaction selector did throw an InvalidOperationException:
+				               selector failed
+				             """).And
+				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+				.Because("the selector answered nothing, so the expectation fails with its exception");
+		}
+
+		[Fact]
 		public async Task Then_WhenNoMatch_ShouldReturnFalse()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -243,6 +270,32 @@ public sealed partial class ThatVerificationResultIs
 				}
 
 				await That(Act).DoesNotThrow();
+			}
+
+			[Fact]
+			public async Task WhenInteractionSelectorThrows_ShouldFail()
+			{
+				InvalidOperationException exception = new("selector failed");
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(2);
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+						.DoesNotComplyWith(it => it.Then(_ => throw exception));
+				}
+
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             Expected that sut.Mock.Verify.MyMethod(It.Is(1))
+					             invoked method MyMethod(1) not in order,
+					             but the interaction selector did throw an InvalidOperationException:
+					               selector failed
+					             """).And
+					.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+					.Because("a selector that answered nothing must not be inverted into a success");
 			}
 
 			[Fact]

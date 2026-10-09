@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Threading;
+using aweXpect.Chronology;
 using Mockolate;
 using Mockolate.Verify;
 using Xunit.Sdk;
@@ -8,6 +11,45 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class AtMost
 	{
+		[Fact]
+		public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
+		{
+			IMyService sut = IMyService.CreateMock();
+			using CancellationTokenSource cts = new();
+			cts.CancelAfter(50.Milliseconds());
+			Stopwatch stopwatch = Stopwatch.StartNew();
+
+			sut.MyMethod(1, false);
+			sut.MyMethod(1, false);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(30.Seconds())).AtMost(1)
+					.WithCancellation(cts.Token);
+			}
+
+			await That(Act).Throws<InconclusiveException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) at most once,
+				             but it could not be verified, because the evaluation was already canceled
+
+				             Matching Interactions:
+				             [
+				               invoke method MyMethod(1, False),
+				               invoke method MyMethod(1, False)
+				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, False),
+				               invoke method MyMethod(1, False)
+				             ]
+				             """);
+			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
+		}
+
 		[Theory]
 		[InlineData(1, "once")]
 		[InlineData(2, "twice")]
@@ -78,6 +120,41 @@ public sealed partial class ThatVerificationResultIs
 			}
 
 			await That(Act).DoesNotThrow();
+		}
+
+		[Fact]
+		public async Task WhenInvokedMoreOften_AwaitableSubject_ShouldFailAfterTimeoutOfSubject()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			sut.MyMethod(1, false);
+			sut.MyMethod(2, false);
+			sut.MyMethod(1, false);
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(50.Milliseconds())).AtMost(1);
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) at most once,
+				             but found it twice
+
+				             Matching Interactions:
+				             [
+				               invoke method MyMethod(1, False),
+				               invoke method MyMethod(1, False)
+				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, False),
+				               invoke method MyMethod(2, False),
+				               invoke method MyMethod(1, False)
+				             ]
+				             """);
 		}
 
 		[Theory]
@@ -178,6 +255,24 @@ public sealed partial class ThatVerificationResultIs
 					              *
 					              ]
 					              """).AsWildcard();
+			}
+
+			[Fact]
+			public async Task WhenInvokedMoreThanExpected_AwaitableSubject_ShouldSucceed()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(1, false);
+				sut.MyMethod(1, false);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(50.Milliseconds()))
+						.DoesNotComplyWith(it => it.AtMost(1));
+				}
+
+				await That(Act).DoesNotThrow()
+					.Because("the timeout of the subject fails the verification, which satisfies the negation");
 			}
 
 			[Theory]

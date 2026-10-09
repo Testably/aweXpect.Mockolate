@@ -66,7 +66,7 @@ public static partial class ThatVerificationResult
 					result = false;
 				}
 
-				verificationResult = check(verify);
+				verificationResult = UserCode.Invoke(check, verify, "the interaction selector");
 			}
 
 			_expectations.Add(verificationResult.Expectation);

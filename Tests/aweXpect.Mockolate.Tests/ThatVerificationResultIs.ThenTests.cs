@@ -1,4 +1,5 @@
 using Mockolate;
+using Mockolate.Verify;
 using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
@@ -144,6 +145,24 @@ public sealed partial class ThatVerificationResultIs
 				.Throws<XunitException>();
 		}
 
+		[Fact]
+		public async Task Then_WhenSubjectIsNull_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).Then();
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interactions in order,
+				             but it was <null>
+				             """);
+		}
+
 		public sealed class NegatedTests
 		{
 			[Fact]
@@ -165,6 +184,25 @@ public sealed partial class ThatVerificationResultIs
 				XunitException exception = await That(Act).Throws<XunitException>();
 				await That(exception.Message).DoesNotContain("Interactions")
 					.Because("only the second item fails, which shows no interactions in the negated case");
+			}
+
+			[Fact]
+			public async Task WhenSubjectIsNull_ShouldFail()
+			{
+				VerificationResult<IMyService>? subject = null;
+
+				async Task Act()
+				{
+					await That(subject!).DoesNotComplyWith(it => it.Then());
+				}
+
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             Expected that subject
+					             had the interactions not in order,
+					             but it was <null>
+					             """)
+					.Because("a null subject cannot be verified, so the negation fails as well");
 			}
 
 			[Fact]

@@ -11,6 +11,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened at least once.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>
 		AtLeastOnce<TVerify>(this IThat<VerificationResult<TVerify>> subject)
 	{

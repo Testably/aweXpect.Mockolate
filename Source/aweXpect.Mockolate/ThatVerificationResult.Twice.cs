@@ -11,6 +11,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened exactly twice.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>> Twice<TVerify>(
 		this IThat<VerificationResult<TVerify>> subject)
 	{

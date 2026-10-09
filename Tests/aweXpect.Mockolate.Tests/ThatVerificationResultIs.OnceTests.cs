@@ -1,6 +1,7 @@
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
+using Mockolate.Verify;
 using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
@@ -328,6 +329,43 @@ public sealed partial class ThatVerificationResultIs
 				             ]
 				             """).AsWildcard()
 				.Because("the interactions of the first mock must not be shown for the second item");
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).Once();
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interaction exactly once,
+				             but it was <null>
+				             """);
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_Negated_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).DoesNotComplyWith(it => it.Once());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interaction not exactly once,
+				             but it was <null>
+				             """)
+				.Because("a null subject cannot be verified, so the negation fails as well");
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using Mockolate;
+using Mockolate.Verify;
 using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
@@ -109,8 +110,45 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
+		[Fact]
+		public async Task WhenSubjectIsNull_ShouldFail()
+		{
+			VerificationResult<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).AtMost(2);
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             had the interaction at most twice,
+				             but it was <null>
+				             """);
+		}
+
 		public sealed class NegatedTests
 		{
+			[Fact]
+			public async Task WhenSubjectIsNull_ShouldFail()
+			{
+				VerificationResult<IMyService>? subject = null;
+
+				async Task Act()
+				{
+					await That(subject!).DoesNotComplyWith(it => it.AtMost(2));
+				}
+
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             Expected that subject
+					             had the interaction more than twice,
+					             but it was <null>
+					             """)
+					.Because("a null subject cannot be verified, so the negation fails as well");
+			}
+
 			[Theory]
 			[InlineData(4, 3)]
 			[InlineData(6, 4)]

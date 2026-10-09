@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -54,27 +55,34 @@ public static partial class ThatVerificationResult
 	///     failure message reads.
 	/// </remarks>
 	private abstract class VerificationCountConstraint<TVerify>(string it, ExpectationGrammars grammars)
-		: ConstraintResult.WithValue<VerificationResult<TVerify>>(it, grammars)
+		: ConstraintResult.WithNotNullValue<VerificationResult<TVerify>>(it, grammars)
 	{
 		private IInteraction[]? _allInteractions;
+		private string? _expectation;
 		private IInteraction[]? _matchingInteractions;
 
 		protected int Count => _matchingInteractions?.Length ?? 0;
 
-		protected string Expectation { get; private set; } = "";
+		protected string Expectation => _expectation ?? "had the interaction";
 
 		protected abstract bool IsMet(int count);
 
-		protected void Verify(VerificationResult<TVerify> actual)
+		protected void Verify(VerificationResult<TVerify>? actual)
 		{
-			Start(actual);
-			Complete(actual, ((IVerificationResult)actual).Verify(Check));
+			if (Start(actual))
+			{
+				Complete(actual, ((IVerificationResult)actual).Verify(Check));
+			}
 		}
 
-		protected async ValueTask VerifyAsync(VerificationResult<TVerify> actual,
+		protected async ValueTask VerifyAsync(VerificationResult<TVerify>? actual,
 			ExpectationBuilder expectationBuilder, WithinOptions options)
 		{
-			Start(actual);
+			if (!Start(actual))
+			{
+				return;
+			}
+
 			VerificationResult<TVerify> verificationResult = actual;
 			if (options.CancellationToken is not null)
 			{
@@ -106,12 +114,19 @@ public static partial class ThatVerificationResult
 			}
 		}
 
-		private void Start(VerificationResult<TVerify> actual)
+		private bool Start([NotNullWhen(true)] VerificationResult<TVerify>? actual)
 		{
 			Actual = actual;
-			Expectation = ((IVerificationResult)actual).Expectation;
+			_expectation = null;
 			_matchingInteractions = null;
 			_allInteractions = null;
+			if (actual is null)
+			{
+				return false;
+			}
+
+			_expectation = ((IVerificationResult)actual).Expectation;
+			return true;
 		}
 
 		private bool Check(IInteraction[] interactions)
@@ -155,7 +170,7 @@ public static partial class ThatVerificationResult
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
-		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
 			CancellationToken cancellationToken)
 		{
 			await VerifyAsync(actual, expectationBuilder, options);
@@ -213,7 +228,7 @@ public static partial class ThatVerificationResult
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IValueConstraint<VerificationResult<TVerify>>
 	{
-		public ConstraintResult IsMetBy(VerificationResult<TVerify> actual)
+		public ConstraintResult IsMetBy(VerificationResult<TVerify>? actual)
 		{
 			Verify(actual);
 			return this;
@@ -252,7 +267,7 @@ public static partial class ThatVerificationResult
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
-		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
 			CancellationToken cancellationToken)
 		{
 			await VerifyAsync(actual, expectationBuilder, options);

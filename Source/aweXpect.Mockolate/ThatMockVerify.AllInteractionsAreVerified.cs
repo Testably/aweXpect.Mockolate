@@ -16,6 +16,7 @@ public static partial class ThatMockVerify
 	/// <summary>
 	///     Verifies that all interactions on the mock have been verified.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrResult<IMockVerify<TVerify>, IThat<IMockVerify<TVerify>>>
 		AllInteractionsAreVerified<TVerify>(
 			this IThat<IMockVerify<TVerify>> subject)
@@ -26,10 +27,10 @@ public static partial class ThatMockVerify
 	private sealed class AllInteractionsAreVerifiedConstraint<TVerify>(
 		string it,
 		ExpectationGrammars grammars)
-		: ConstraintResult.WithValue<IMockVerify<TVerify>>(it, grammars),
+		: ConstraintResult.WithNotNullValue<IMockVerify<TVerify>>(it, grammars),
 			IValueConstraint<IMockVerify<TVerify>>
 	{
-		public ConstraintResult IsMetBy(IMockVerify<TVerify> actual)
+		public ConstraintResult IsMetBy(IMockVerify<TVerify>? actual)
 		{
 			Actual = actual;
 			Outcome = actual is IMock mock && mock.MockRegistry.Interactions.GetUnverifiedInteractions().Count == 0

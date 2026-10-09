@@ -11,6 +11,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened never.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>
 		Never<TVerify>(this IThat<VerificationResult<TVerify>> subject)
 	{

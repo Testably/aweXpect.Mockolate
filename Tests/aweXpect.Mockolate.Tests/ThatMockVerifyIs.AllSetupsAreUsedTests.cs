@@ -1,4 +1,5 @@
 using Mockolate;
+using Mockolate.Verify;
 using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
@@ -26,6 +27,43 @@ public sealed partial class ThatMockVerifyIs
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has not used all setups,
 				             but all were
+				             """);
+		}
+
+		[Fact]
+		public async Task Negated_WhenSubjectIsNull_ShouldThrow()
+		{
+			IMockVerify<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).DoesNotComplyWith(it => it.AllSetupsAreUsed());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the ThatMockVerifyIs.IMyService mock
+				             has not used all setups,
+				             but it was <null>
+				             """)
+				.Because("a null subject cannot be verified, so the negation fails as well");
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_ShouldThrow()
+		{
+			IMockVerify<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).AllSetupsAreUsed();
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the ThatMockVerifyIs.IMyService mock
+				             has used all setups,
+				             but it was <null>
 				             """);
 		}
 

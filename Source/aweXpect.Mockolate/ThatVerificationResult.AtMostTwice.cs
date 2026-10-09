@@ -10,6 +10,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened at most twice.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>
 		AtMostTwice<TVerify>(this IThat<VerificationResult<TVerify>> subject)
 		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)

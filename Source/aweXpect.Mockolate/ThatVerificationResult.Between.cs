@@ -15,6 +15,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened between <paramref name="minimum" />…
 	/// </summary>
+	[GuaranteesNotNull]
 	public static BetweenResult<AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>,
 			Times>
 		Between<TVerify>(this IThat<VerificationResult<TVerify>> subject, int minimum)
@@ -41,7 +42,7 @@ public static partial class ThatVerificationResult
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
-		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
 			CancellationToken cancellationToken)
 		{
 			await VerifyAsync(actual, expectationBuilder, options);

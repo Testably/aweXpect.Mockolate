@@ -32,6 +32,43 @@ public sealed partial class ThatMockVerifyIs
 		}
 
 		[Fact]
+		public async Task Negated_WhenSubjectIsNull_ShouldThrow()
+		{
+			IMockVerify<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).DoesNotComplyWith(it => it.AllInteractionsAreVerified());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the ThatMockVerifyIs.IMyService mock
+				             has not all interactions verified,
+				             but it was <null>
+				             """)
+				.Because("a null subject cannot be verified, so the negation fails as well");
+		}
+
+		[Fact]
+		public async Task WhenSubjectIsNull_ShouldThrow()
+		{
+			IMockVerify<IMyService>? subject = null;
+
+			async Task Act()
+			{
+				await That(subject!).AllInteractionsAreVerified();
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the ThatMockVerifyIs.IMyService mock
+				             has all interactions verified,
+				             but it was <null>
+				             """);
+		}
+
+		[Fact]
 		public async Task WhenAllInvocationsWereVerified_ShouldNotThrow()
 		{
 			IMyService sut = IMyService.CreateMock();

@@ -17,6 +17,7 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened according to the <paramref name="predicate" />.
 	/// </summary>
+	[GuaranteesNotNull]
 	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>> Times<TVerify>(
 		this IThat<VerificationResult<TVerify>> subject, Func<int, bool> predicate,
 		[CallerArgumentExpression("predicate")]
@@ -41,7 +42,7 @@ public static partial class ThatVerificationResult
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncConstraint<VerificationResult<TVerify>>
 	{
-		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify> actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
 			CancellationToken cancellationToken)
 		{
 			await VerifyAsync(actual, expectationBuilder, options);

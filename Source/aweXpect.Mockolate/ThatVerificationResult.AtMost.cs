@@ -13,7 +13,7 @@ public static partial class ThatVerificationResult
 	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>
 		AtMost<TVerify>(this IThat<VerificationResult<TVerify>> subject, Times times)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint(times.Value,
-				static (expected, it, grammars) => new HasAtMostConstraint<TVerify>(it, grammars, expected)),
+		=> new(subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
+				=> new HasAtMostConstraint<TVerify>(expectationBuilder, it, grammars, times.Value)),
 			subject);
 }

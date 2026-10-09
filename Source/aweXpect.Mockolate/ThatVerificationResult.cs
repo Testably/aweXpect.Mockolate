@@ -68,14 +68,6 @@ public static partial class ThatVerificationResult
 
 		protected abstract bool IsMet(int count);
 
-		protected void Verify(VerificationResult<TVerify>? actual)
-		{
-			if (Start(actual))
-			{
-				Complete(actual, ((IVerificationResult)actual).Verify(Check));
-			}
-		}
-
 		/// <remarks>
 		///     A cancellation by the caller, or by a timeout of the evaluation that ends the wait early, leaves the outcome
 		///     undecided, so that core reports it like for its own expectations.
@@ -254,15 +246,17 @@ public static partial class ThatVerificationResult
 	}
 
 	private sealed class HasAtMostConstraint<TVerify>(
+		ExpectationBuilder expectationBuilder,
 		string it,
 		ExpectationGrammars grammars,
 		int expected)
 		: VerificationCountConstraint<TVerify>(it, grammars),
-			IValueConstraint<VerificationResult<TVerify>>
+			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
-		public ConstraintResult IsMetBy(VerificationResult<TVerify>? actual)
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
+			IEvaluationContext context, CancellationToken cancellationToken)
 		{
-			Verify(actual);
+			await VerifyAsync(actual, expectationBuilder, null, context, cancellationToken);
 			return this;
 		}
 

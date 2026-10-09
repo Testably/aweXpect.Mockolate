@@ -80,9 +80,12 @@ public static partial class ThatVerificationResult
 		/// <remarks>
 		///     A cancellation by the caller, or by a timeout of the evaluation that ends the wait early, leaves the outcome
 		///     undecided, so that core reports it like for its own expectations.
+		///     <para />
+		///     Without <paramref name="options" />, e.g. for <c>Never</c>, which further interactions cannot satisfy, a
+		///     cancellation alone does not make the verification wait.
 		/// </remarks>
 		protected async ValueTask VerifyAsync(VerificationResult<TVerify>? actual,
-			ExpectationBuilder expectationBuilder, WithinOptions options, IEvaluationContext context,
+			ExpectationBuilder expectationBuilder, WithinOptions? options, IEvaluationContext context,
 			CancellationToken cancellationToken)
 		{
 			if (!Start(actual))
@@ -91,10 +94,11 @@ public static partial class ThatVerificationResult
 			}
 
 			VerificationResult<TVerify> verificationResult = actual;
-			TimeSpan? timeout = options.Timeout ?? expectationBuilder.Timeout;
-			if (timeout is not null || expectationBuilder.CancellationToken is not null)
+			TimeSpan? timeout = options?.Timeout ?? expectationBuilder.Timeout;
+			if (timeout is not null || (options is not null && expectationBuilder.CancellationToken is not null))
 			{
-				if (cancellationToken.CanBeCanceled)
+				// An awaitable subject of the caller would keep the token after the evaluation released it.
+				if (cancellationToken.CanBeCanceled && verificationResult is not IAsyncVerificationResult)
 				{
 					verificationResult = verificationResult.WithCancellation(cancellationToken);
 				}
@@ -190,7 +194,7 @@ public static partial class ThatVerificationResult
 		string it,
 		ExpectationGrammars grammars,
 		int expected,
-		WithinOptions options)
+		WithinOptions? options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using aweXpect.Core;
 using aweXpect.Options;
 
@@ -19,8 +20,25 @@ public class AndOrWithinResult<TType, TThat>(
 	/// <summary>
 	///     …within the given <paramref name="timeout" />.
 	/// </summary>
+	/// <remarks>
+	///     <see cref="Timeout.InfiniteTimeSpan" /> imposes no limit.
+	/// </remarks>
+	/// <exception cref="ArgumentOutOfRangeException">The <paramref name="timeout" /> is negative.</exception>
+	/// <exception cref="InvalidOperationException">A timeout is already set.</exception>
 	public AndOrWithinResult<TType, TThat> Within(TimeSpan timeout)
 	{
+		if (options.Timeout is not null)
+		{
+			throw Tracing.WriteException(
+				new InvalidOperationException($"{nameof(Within)} cannot be specified more than once."));
+		}
+
+		if (timeout < TimeSpan.Zero && timeout != Timeout.InfiniteTimeSpan)
+		{
+			throw Tracing.WriteException(
+				new ArgumentOutOfRangeException(nameof(timeout), "The timeout must not be negative."));
+		}
+
 		options.Timeout = timeout;
 		return this;
 	}

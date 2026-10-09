@@ -20,8 +20,8 @@ public static partial class ThatVerificationResult
 	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
 		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
-				=> new ThenConstraint<T>(it, grammars, interactions)),
+		=> new(subject.Get().ExpectationBuilder.AddConstraint(interactions,
+				static (interactions, it, grammars) => new ThenConstraint<T>(it, grammars, interactions)),
 			subject);
 
 	private sealed class ThenConstraint<T>(

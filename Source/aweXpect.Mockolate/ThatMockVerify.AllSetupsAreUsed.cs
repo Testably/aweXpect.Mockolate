@@ -20,7 +20,7 @@ public static partial class ThatMockVerify
 	public static AndOrResult<IMockVerify<TVerify>, IThat<IMockVerify<TVerify>>>
 		AllSetupsAreUsed<TVerify>(
 			this IThat<IMockVerify<TVerify>> subject)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((_, it, grammars)
+		=> new(subject.Get().ExpectationBuilder.AddConstraint((it, grammars)
 				=> new AllSetupsAreUsedConstraint<TVerify>(it, grammars)),
 			subject);
 

@@ -136,7 +136,7 @@ jobs:
                 with:
                     path: artifacts
             -   name: Publish Test Results
-                uses: EnricoMi/publish-unit-test-result-action@v2
+                uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
                 with:
                     comment_mode: always
                     files: "artifacts/**/**/*.trx"
@@ -209,7 +209,7 @@ jobs:
             -   name: Create GitHub release
                 if: steps.check-pre-release.outputs.release == 'true'
                 continue-on-error: true
-                uses: softprops/action-gh-release@v3
+                uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
                 with:
                     name: ${{ steps.tag.outputs.release_version }}
                     tag_name: ${{ steps.tag.outputs.release_version }}

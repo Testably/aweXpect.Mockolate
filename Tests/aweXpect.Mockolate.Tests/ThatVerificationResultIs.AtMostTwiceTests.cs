@@ -26,7 +26,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at most twice,
-				             but found it 3 times
+				             but it was found 3 times
 
 				             Matching Interactions:
 				             [

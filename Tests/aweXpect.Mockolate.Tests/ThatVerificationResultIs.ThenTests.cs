@@ -266,7 +266,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that subject
-				             had the interactions in order,
+				             has the interactions in order,
 				             but it was <null>
 				             """);
 		}
@@ -338,9 +338,16 @@ public sealed partial class ThatVerificationResultIs
 						.All().ComplyWith(x => x.DoesNotComplyWith(y => y.Then(m => m.MyMethod(It.Is(2)))));
 				}
 
-				XunitException exception = await That(Act).Throws<XunitException>();
-				await That(exception.Message).DoesNotContain("Interactions")
-					.Because("only the second item fails, which shows no interactions in the negated case");
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             *
+					             All Interactions (item [1]):
+					             [
+					               invoke method MyMethod(1),
+					               invoke method MyMethod(2)
+					             ]
+					             """).AsWildcard()
+					.Because("only the second item fails, so only its interactions are shown");
 			}
 
 			[Fact]
@@ -356,7 +363,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).Throws<XunitException>()
 					.WithMessage("""
 					             Expected that subject
-					             had the interactions not in order,
+					             has the interactions not in order,
 					             but it was <null>
 					             """)
 					.Because("a null subject cannot be verified, so the negation fails as well");
@@ -382,6 +389,12 @@ public sealed partial class ThatVerificationResultIs
 					             invoked method MyMethod(1), then
 					             invoked method MyMethod(2) not in order,
 					             but it did
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1),
+					               invoke method MyMethod(2)
+					             ]
 					             """);
 			}
 
@@ -469,6 +482,13 @@ public sealed partial class ThatVerificationResultIs
 					             invoked method MyMethod(2), then
 					             invoked method MyMethod(3) not in order,
 					             but it did
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1),
+					               invoke method MyMethod(2),
+					               invoke method MyMethod(3)
+					             ]
 					             """);
 			}
 		}

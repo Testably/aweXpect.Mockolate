@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 using aweXpect.Core;
@@ -30,12 +29,15 @@ public static partial class ThatMockVerify
 		: ConstraintResult.WithNotNullValue<IMockVerify<TVerify>>(it, grammars),
 			IValueConstraint<IMockVerify<TVerify>>
 	{
+		private IReadOnlyCollection<IInteraction>? _unverifiedInteractions;
+
 		public ConstraintResult IsMetBy(IMockVerify<TVerify>? actual)
 		{
 			Actual = actual;
-			Outcome = actual is IMock mock && mock.MockRegistry.Interactions.GetUnverifiedInteractions().Count == 0
-				? Outcome.Success
-				: Outcome.Failure;
+			_unverifiedInteractions = actual is IMock mock
+				? mock.MockRegistry.Interactions.GetUnverifiedInteractions()
+				: null;
+			Outcome = _unverifiedInteractions?.Count == 0 ? Outcome.Success : Outcome.Failure;
 			return this;
 		}
 
@@ -44,35 +46,31 @@ public static partial class ThatMockVerify
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 		{
-			if (Actual is IMock mock)
+			if (_unverifiedInteractions is null)
 			{
-				IReadOnlyCollection<IInteraction> missingInteractions =
-					mock.MockRegistry.Interactions.GetUnverifiedInteractions();
-				stringBuilder.Append("the following ");
-				if (missingInteractions.Count == 1)
-				{
-					stringBuilder.Append("interaction was not verified:");
-				}
-				else
-				{
-					stringBuilder.Append(missingInteractions.Count)
-						.Append(" interactions were not verified:");
-				}
-
-				stringBuilder.AppendLine().Append(" - ");
-				stringBuilder.Append(string.Join($"{Environment.NewLine} - ", missingInteractions));
+				stringBuilder.Append(It).Append(" was not a Mockolate mock");
 			}
 			else
 			{
-				stringBuilder.Append("not all were");
+				stringBuilder.Append(It).Append(" had ").Append(_unverifiedInteractions.Count)
+					.Append(_unverifiedInteractions.Count == 1 ? " unverified interaction" : " unverified interactions");
 			}
 		}
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("has not all interactions verified");
+			=> stringBuilder.Append("does not have all interactions verified");
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("all were");
+			=> stringBuilder.Append(It).Append(" did");
+
+		public override void AppendContexts(ResultContextCollector contexts)
+		{
+			if (_unverifiedInteractions is { Count: > 0, } unverifiedInteractions)
+			{
+				contexts.Add(new ResultContext.SyncCallback("Unverified Interactions",
+					() => Formatter.Format(unverifiedInteractions, FormattingOptions.MultipleLines)));
+			}
+		}
 
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{

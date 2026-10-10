@@ -26,8 +26,8 @@ public sealed partial class ThatMockVerifyIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
-				             has not all interactions verified,
-				             but all were
+				             does not have all interactions verified,
+				             but it did
 				             """);
 		}
 
@@ -44,7 +44,7 @@ public sealed partial class ThatMockVerifyIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the ThatMockVerifyIs.IMyService mock
-				             has not all interactions verified,
+				             does not have all interactions verified,
 				             but it was <null>
 				             """)
 				.Because("a null subject cannot be verified, so the negation fails as well");
@@ -106,9 +106,13 @@ public sealed partial class ThatMockVerifyIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has all interactions verified,
-				             but the following 2 interactions were not verified:
-				              - invoke method DoWork(1)
-				              - invoke method DoWork(3)
+				             but it had 2 unverified interactions
+
+				             Unverified Interactions:
+				             [
+				               invoke method DoWork(1),
+				               invoke method DoWork(3)
+				             ]
 				             """);
 		}
 
@@ -131,8 +135,12 @@ public sealed partial class ThatMockVerifyIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has all interactions verified,
-				             but the following interaction was not verified:
-				              - invoke method DoWork(2)
+				             but it had 1 unverified interaction
+
+				             Unverified Interactions:
+				             [
+				               invoke method DoWork(2)
+				             ]
 				             """);
 		}
 	}

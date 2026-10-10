@@ -30,7 +30,7 @@ internal static class Checks
 				sut.Greet(1);
 				sut.Greet(1);
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Once();
-			}, "the aweXpect.Mockolate.Aot.IGreeter mock", "invoked method Greet(1) exactly once,", "but found it twice")),
+			}, "the aweXpect.Mockolate.Aot.IGreeter mock", "invoked method Greet(1) exactly once,", "but it was found twice")),
 		new("Never passes without an interaction",
 			() => ShouldPass(async () =>
 			{
@@ -44,7 +44,7 @@ internal static class Checks
 				IGreeter sut = IGreeter.CreateMock();
 				sut.Greet(1);
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Never();
-			}, "never invoked method Greet(1),", "but found it once")),
+			}, "never invoked method Greet(1),", "but it was found once")),
 		new("AtLeast passes for enough interactions",
 			() => ShouldPass(async () =>
 			{
@@ -60,7 +60,7 @@ internal static class Checks
 				IGreeter sut = IGreeter.CreateMock();
 				sut.Greet(1);
 				await That(sut.Mock.Verify.Greet(It.Is(1))).AtLeast(2);
-			}, "invoked method Greet(1) at least twice,", "but found it only once")),
+			}, "invoked method Greet(1) at least twice,", "but it was found only once")),
 		new("Between passes for a count in the range",
 			() => ShouldPass(async () =>
 			{
@@ -74,7 +74,7 @@ internal static class Checks
 			{
 				IGreeter sut = IGreeter.CreateMock();
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Between(1).And(3);
-			}, "invoked method Greet(1) between 1 and 3 times,", "but never found it")),
+			}, "invoked method Greet(1) between 1 and 3 times,", "but it was never found")),
 		new("Times passes when the predicate holds",
 			() => ShouldPass(async () =>
 			{
@@ -89,7 +89,7 @@ internal static class Checks
 				IGreeter sut = IGreeter.CreateMock();
 				sut.Greet(1);
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Times(n => n % 2 == 0);
-			}, "invoked method Greet(1) according to the predicate n => n % 2 == 0,", "but found it once")),
+			}, "invoked method Greet(1) according to the predicate n => n % 2 == 0,", "but it was found once")),
 		new("Then passes for interactions in order",
 			() => ShouldPass(async () =>
 			{
@@ -120,7 +120,7 @@ internal static class Checks
 			{
 				IGreeter sut = IGreeter.CreateMock();
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Once().Within(TimeSpan.FromMilliseconds(50));
-			}, "invoked method Greet(1) exactly once within 0:00.050,", "but never found it")),
+			}, "invoked method Greet(1) exactly once within 0:00.050,", "but it was never found")),
 		new("an awaitable subject passes for an interaction in the background",
 			() => ShouldPass(async () =>
 			{
@@ -134,7 +134,7 @@ internal static class Checks
 			{
 				IGreeter sut = IGreeter.CreateMock();
 				await That(sut.Mock.Verify.Greet(It.Is(1)).Within(TimeSpan.FromMilliseconds(50))).Once();
-			}, "invoked method Greet(1) exactly once,", "but never found it")),
+			}, "invoked method Greet(1) exactly once,", "but it was never found")),
 		new("AllInteractionsAreVerified passes when every interaction is verified",
 			() => ShouldPass(async () =>
 			{
@@ -152,7 +152,7 @@ internal static class Checks
 				sut.Greet(2);
 				await That(sut.Mock.Verify.Greet(It.Is(1))).Once();
 				await That(sut.Mock.Verify).AllInteractionsAreVerified();
-			}, "has all interactions verified,", "interaction was not verified:", "Greet(2)")),
+			}, "has all interactions verified,", "but it had 1 unverified interaction", "Unverified Interactions:", "Greet(2)")),
 		new("AllSetupsAreUsed passes when every setup is used",
 			() => ShouldPass(async () =>
 			{
@@ -169,7 +169,7 @@ internal static class Checks
 				sut.Mock.Setup.Greet(It.Is(2));
 				sut.Greet(1);
 				await That(sut.Mock.Verify).AllSetupsAreUsed();
-			}, "has used all setups,", "setup was not used:", "Greet(2)")),
+			}, "has used all setups,", "but it had 1 unused setup", "Unused Setups:", "Greet(2)")),
 		new("WithJson passes for an equivalent body",
 			() => ShouldPass(async () =>
 			{
@@ -183,7 +183,7 @@ internal static class Checks
 				HttpClient httpClient = await PostAsync("{\"foo\": 2}");
 				await That(httpClient.Mock.Verify.PostAsync(It.IsAny<Uri>(),
 					It.IsHttpContent().WithJson("{\"foo\": 1}"))).Once();
-			}, "exactly once,", "but never found it")),
+			}, "exactly once,", "but it was never found")),
 		new("WithJsonMatching passes for an equivalent body or fails loudly",
 			() => ShouldPassOrFailLoudly(async () =>
 			{
@@ -197,7 +197,7 @@ internal static class Checks
 				HttpClient httpClient = await PostAsync("{\"foo\": 2}");
 				await That(httpClient.Mock.Verify.PostAsync(It.IsAny<Uri>(),
 					It.IsHttpContent().WithJsonMatching(new { foo = 1, }))).Once();
-			}, "exactly once,", "but never found it")),
+			}, "exactly once,", "but it was never found")),
 	];
 
 	private static async Task<HttpClient> PostAsync(string body)

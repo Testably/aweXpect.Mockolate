@@ -87,11 +87,7 @@ public static partial class ThatVerificationResult
 				Outcome = result ? Outcome.Success : Outcome.Failure;
 			}
 
-			if (Outcome != Outcome.Success)
-			{
-				_allInteractions = snapshot;
-			}
-
+			_allInteractions = snapshot;
 			return this;
 
 			bool VerifyFirstInteractions(IInteraction[] filteredInteractions)
@@ -181,7 +177,7 @@ public static partial class ThatVerificationResult
 		{
 			if (_expectations.Count == 0)
 			{
-				return stringBuilder.Append("had the interactions");
+				return stringBuilder.Append("has the interactions");
 			}
 
 			string separator = $", then{Environment.NewLine}{indentation}";

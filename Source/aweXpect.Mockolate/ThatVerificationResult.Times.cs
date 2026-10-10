@@ -67,11 +67,11 @@ public static partial class ThatVerificationResult
 		{
 			if (Count == 0)
 			{
-				stringBuilder.Append("never found ").Append(It);
+				stringBuilder.Append(It).Append(" was never found");
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());
+				stringBuilder.Append(It).Append(" was found ").Append(Count.ToAmountString());
 			}
 		}
 

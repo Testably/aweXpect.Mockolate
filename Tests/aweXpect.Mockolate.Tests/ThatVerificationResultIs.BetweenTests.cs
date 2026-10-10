@@ -43,7 +43,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) between 3 and 6 times,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -164,7 +164,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) between {minimum} and {maximum} times,
-				              but never found it
+				              but it was never found
 
 				              Matching Interactions:
 				              []
@@ -195,7 +195,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) between {minimum} and {maximum} times,
-				              but found it only {invocationTimes} times
+				              but it was found only {invocationTimes} times
 
 				              Matching Interactions:
 				              [
@@ -225,7 +225,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) between {minimum} and {maximum} times,
-				              but found it {invocationTimes} times
+				              but it was found {invocationTimes} times
 
 				              Matching Interactions:
 				              [
@@ -254,7 +254,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) between 4 and 6 times within 0:00.050,
-				             but found it only 3 times
+				             but it was found only 3 times
 
 				             Matching Interactions:
 				             [
@@ -346,7 +346,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage($"""
 					              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					              invoked method MyMethod(1, false) not between {minimum} and {maximum} times,
-					              but found it {invocationTimes} times
+					              but it was found {invocationTimes} times
 
 					              Matching Interactions:
 					              [

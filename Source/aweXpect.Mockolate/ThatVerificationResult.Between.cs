@@ -85,11 +85,11 @@ public static partial class ThatVerificationResult
 		{
 			if (Count == 0)
 			{
-				stringBuilder.Append("never found ").Append(It);
+				stringBuilder.Append(It).Append(" was never found");
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(It).Append(Count < minimum ? " only " : " ")
+				stringBuilder.Append(It).Append(" was found").Append(Count < minimum ? " only " : " ")
 					.Append(Count.ToAmountString());
 			}
 		}
@@ -99,6 +99,6 @@ public static partial class ThatVerificationResult
 				.Append(maximum).Append(" times").Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());
+			=> stringBuilder.Append(It).Append(" was found ").Append(Count.ToAmountString());
 	}
 }

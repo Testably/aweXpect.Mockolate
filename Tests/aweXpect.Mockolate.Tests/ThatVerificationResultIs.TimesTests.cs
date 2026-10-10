@@ -32,10 +32,10 @@ public sealed partial class ThatVerificationResultIs
 
 			string expectedFoundTimes = count switch
 			{
-				0 => "never found it",
-				1 => "found it once",
-				2 => "found it twice",
-				_ => $"found it {count} times",
+				0 => "it was never found",
+				1 => "it was found once",
+				2 => "it was found twice",
+				_ => $"it was found {count} times",
 			};
 
 			await That(Act).Throws<XunitException>().OnlyIf(!expectSuccess)
@@ -71,10 +71,10 @@ public sealed partial class ThatVerificationResultIs
 
 			string expectedFoundTimes = count switch
 			{
-				0 => "never found it",
-				1 => "found it once",
-				2 => "found it twice",
-				_ => $"found it {count} times",
+				0 => "it was never found",
+				1 => "it was found once",
+				2 => "it was found twice",
+				_ => $"it was found {count} times",
 			};
 
 			await That(Act).Throws<XunitException>().OnlyIf(!expectSuccess)
@@ -121,7 +121,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate n => n % 3 == 2,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -225,7 +225,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4 within 0:00.050,
-				             but found it 4 times
+				             but it was found 4 times
 
 				             Matching Interactions:
 				             [
@@ -270,6 +270,11 @@ public sealed partial class ThatVerificationResultIs
 				             [
 				               invoke method MyMethod(1, False)
 				             ]
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1, False)
+				             ]
 				             """).And
 				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
 				.Because("the predicate answered nothing, so the expectation fails with its exception");
@@ -296,6 +301,9 @@ public sealed partial class ThatVerificationResultIs
 
 				             Matching Interactions:
 				             []
+
+				             All Interactions:
+				             []
 				             """).And
 				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
 				.Because("the last check still threw, so the expectation fails with its exception");
@@ -321,6 +329,9 @@ public sealed partial class ThatVerificationResultIs
 				               predicate failed
 
 				             Matching Interactions:
+				             []
+
+				             All Interactions:
 				             []
 				             """).And
 				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
@@ -410,9 +421,15 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) not according to the predicate n => n == 2,
-					             but found it twice
+					             but it was found twice
 
 					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False),
+					               invoke method MyMethod(1, False)
+					             ]
+
+					             All Interactions:
 					             [
 					               invoke method MyMethod(1, False),
 					               invoke method MyMethod(1, False)
@@ -442,6 +459,11 @@ public sealed partial class ThatVerificationResultIs
 					               predicate failed
 
 					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False)
+					             ]
+
+					             All Interactions:
 					             [
 					               invoke method MyMethod(1, False)
 					             ]

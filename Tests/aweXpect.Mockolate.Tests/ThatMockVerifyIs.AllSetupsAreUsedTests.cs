@@ -26,7 +26,7 @@ public sealed partial class ThatMockVerifyIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has not used all setups,
-				             but all were
+				             but it did
 				             """);
 		}
 
@@ -103,9 +103,13 @@ public sealed partial class ThatMockVerifyIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has used all setups,
-				             but the following 2 setups were not used:
-				              - void DoWork(1)
-				              - void DoWork(3)
+				             but it had 2 unused setups
+
+				             Unused Setups:
+				             [
+				               void DoWork(1),
+				               void DoWork(3)
+				             ]
 				             """);
 		}
 
@@ -127,8 +131,12 @@ public sealed partial class ThatMockVerifyIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has used all setups,
-				             but the following setup was not used:
-				              - void DoWork(2)
+				             but it had 1 unused setup
+
+				             Unused Setups:
+				             [
+				               void DoWork(2)
+				             ]
 				             """);
 		}
 	}

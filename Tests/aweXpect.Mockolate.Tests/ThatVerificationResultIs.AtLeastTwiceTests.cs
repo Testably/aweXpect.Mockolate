@@ -42,7 +42,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least twice,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -148,7 +148,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least twice,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -174,7 +174,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least twice,
-				             but found it only once
+				             but it was found only once
 
 				             Matching Interactions:
 				             [
@@ -222,7 +222,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(2, true) at least twice within 0:00.050,
-				             but found it only once
+				             but it was found only once
 
 				             Matching Interactions:
 				             [

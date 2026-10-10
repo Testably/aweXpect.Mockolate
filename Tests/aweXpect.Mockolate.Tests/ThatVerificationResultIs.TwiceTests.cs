@@ -42,7 +42,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -132,7 +132,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
-				             but found it 3 times
+				             but it was found 3 times
 
 				             Matching Interactions:
 				             [
@@ -166,7 +166,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -192,7 +192,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
-				             but found it only once
+				             but it was found only once
 
 				             Matching Interactions:
 				             [
@@ -241,7 +241,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(3, true) exactly twice within 0:00.050,
-				             but found it only once
+				             but it was found only once
 
 				             Matching Interactions:
 				             [

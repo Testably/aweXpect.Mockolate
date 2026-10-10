@@ -59,14 +59,13 @@ public static partial class ThatVerificationResult
 	private abstract class VerificationCountConstraint<TVerify>(string it, ExpectationGrammars grammars)
 		: ConstraintResult.WithNotNullValue<VerificationResult<TVerify>>(it, grammars)
 	{
-		private IInteraction[]? _allInteractions;
 		private string? _expectation;
 		private ExceptionDispatchInfo? _lastCheckException;
 		private IInteraction[]? _matchingInteractions;
 
 		protected int Count => _matchingInteractions?.Length ?? 0;
 
-		protected string Expectation => _expectation ?? "had the interaction";
+		protected string Expectation => _expectation ?? "has the interaction";
 
 		protected abstract bool IsMet(int count);
 
@@ -96,7 +95,7 @@ public static partial class ThatVerificationResult
 
 			if (verificationResult is not IAsyncVerificationResult asyncVerificationResult)
 			{
-				Complete(verificationResult, ((IVerificationResult)verificationResult).Verify(Check));
+				Complete(((IVerificationResult)verificationResult).Verify(Check));
 				return;
 			}
 
@@ -111,7 +110,7 @@ public static partial class ThatVerificationResult
 			long startTimestamp = context.GetTimestamp();
 			try
 			{
-				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(CheckWhileWaiting, waitCts.Token));
+				Complete(await asyncVerificationResult.VerifyAsync(CheckWhileWaiting, waitCts.Token));
 			}
 			catch (Exception exception) when (exception is MockVerificationTimeoutException
 				                                  or OperationCanceledException)
@@ -119,12 +118,11 @@ public static partial class ThatVerificationResult
 				if (IsInconclusive(context.Cancellation, timeout, context.GetElapsedTime(startTimestamp)))
 				{
 					Outcome = Outcome.Undecided;
-					_allInteractions = GetAllInteractions(verificationResult);
 				}
 				else
 				{
 					_lastCheckException?.Throw();
-					Complete(verificationResult, false);
+					Complete(false);
 				}
 			}
 		}
@@ -161,7 +159,6 @@ public static partial class ThatVerificationResult
 			Actual = actual;
 			_expectation = null;
 			_matchingInteractions = null;
-			_allInteractions = null;
 			_lastCheckException = null;
 			if (actual is null)
 			{
@@ -178,17 +175,16 @@ public static partial class ThatVerificationResult
 			return IsMet(interactions.Length);
 		}
 
-		private void Complete(VerificationResult<TVerify> actual, bool isMet)
-		{
-			Outcome = isMet ? Outcome.Success : Outcome.Failure;
-			if (!isMet)
-			{
-				_allInteractions = GetAllInteractions(actual);
-			}
-		}
+		private void Complete(bool isMet)
+			=> Outcome = isMet ? Outcome.Success : Outcome.Failure;
 
 		public override void AppendContexts(ResultContextCollector contexts)
-			=> AppendInteractionContexts(contexts, _matchingInteractions, _allInteractions);
+		{
+			if (Actual is not null)
+			{
+				AppendInteractionContexts(contexts, _matchingInteractions, GetAllInteractions(Actual));
+			}
+		}
 
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
@@ -240,12 +236,12 @@ public static partial class ThatVerificationResult
 		{
 			if (Count == 0)
 			{
-				stringBuilder.Append("never found ").Append(It);
+				stringBuilder.Append(It).Append(" was never found");
 			}
 			else
 			{
 				// Stryker disable once Equality : unreachable boundary — AppendNormalResult only runs when Count != expected
-				stringBuilder.Append("found ").Append(It).Append(Count < expected ? " only " : " ")
+				stringBuilder.Append(It).Append(" was found").Append(Count < expected ? " only " : " ")
 					.Append(Count.ToAmountString());
 			}
 		}
@@ -289,7 +285,7 @@ public static partial class ThatVerificationResult
 			=> stringBuilder.Append(Expectation).Append(" at most ").Append(expected.ToAmountString());
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());
+			=> stringBuilder.Append(It).Append(" was found ").Append(Count.ToAmountString());
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(Expectation).Append(" more than ").Append(expected.ToAmountString());
@@ -298,11 +294,11 @@ public static partial class ThatVerificationResult
 		{
 			if (Count == 0)
 			{
-				stringBuilder.Append("never found ").Append(It);
+				stringBuilder.Append(It).Append(" was never found");
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(It).Append(" only ").Append(Count.ToAmountString());
+				stringBuilder.Append(It).Append(" was found only ").Append(Count.ToAmountString());
 			}
 		}
 	}
@@ -333,11 +329,11 @@ public static partial class ThatVerificationResult
 		{
 			if (Count == 0)
 			{
-				stringBuilder.Append("never found ").Append(It);
+				stringBuilder.Append(It).Append(" was never found");
 			}
 			else
 			{
-				stringBuilder.Append("found ").Append(It).Append(" only ").Append(Count.ToAmountString());
+				stringBuilder.Append(It).Append(" was found only ").Append(Count.ToAmountString());
 			}
 		}
 
@@ -346,6 +342,6 @@ public static partial class ThatVerificationResult
 				.Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("found ").Append(It).Append(' ').Append(Count.ToAmountString());
+			=> stringBuilder.Append(It).Append(" was found ").Append(Count.ToAmountString());
 	}
 }

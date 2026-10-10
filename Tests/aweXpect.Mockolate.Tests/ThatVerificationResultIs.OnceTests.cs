@@ -44,7 +44,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -133,7 +133,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
-				             but found it 3 times
+				             but it was found 3 times
 
 				             Matching Interactions:
 				             [
@@ -166,7 +166,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -209,7 +209,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
-				             but found it twice
+				             but it was found twice
 
 				             Matching Interactions:
 				             [
@@ -240,7 +240,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) exactly once within 0:00.050,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -309,7 +309,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once within 0:00.050,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -336,7 +336,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -494,8 +494,38 @@ public sealed partial class ThatVerificationResultIs
 				             [
 				               invoke method MyMethod(1)
 				             ]
+
+				             All Interactions (item [1]):
+				             [
+				               invoke method MyMethod(1)
+				             ]
 				             """).AsWildcard()
 				.Because("the interactions of the first mock must not be shown for the second item");
+		}
+
+		[Fact]
+		public async Task WhenVerifiedOnMember_ShouldStartResultWithMemberName()
+		{
+			IMyService sut = IMyService.CreateMock();
+			var subject = new { Verification = sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)), };
+
+			async Task Act()
+			{
+				await That(subject).Whose(s => s.Verification, it => it!.Once());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that subject
+				             whose Verification invoked method MyMethod(1, false) exactly once,
+				             but Verification was never found
+
+				             Matching Interactions (Verification):
+				             []
+
+				             All Interactions (Verification):
+				             []
+				             """);
 		}
 
 		[Fact]
@@ -511,7 +541,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that subject
-				             had the interaction exactly once,
+				             has the interaction exactly once,
 				             but it was <null>
 				             """);
 		}
@@ -529,7 +559,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that subject
-				             had the interaction not exactly once,
+				             has the interaction not exactly once,
 				             but it was <null>
 				             """)
 				.Because("a null subject cannot be verified, so the negation fails as well");

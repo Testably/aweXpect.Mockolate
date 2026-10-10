@@ -29,7 +29,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
-				             but found it 3 times
+				             but it was found 3 times
 
 				             Matching Interactions:
 				             [
@@ -65,7 +65,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
-				             but found it once
+				             but it was found once
 
 				             Matching Interactions:
 				             [
@@ -97,7 +97,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
-				             but found it once
+				             but it was found once
 
 				             Matching Interactions:
 				             [
@@ -142,7 +142,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
-				             but found it once
+				             but it was found once
 
 				             Matching Interactions:
 				             [
@@ -173,7 +173,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
-				             but found it twice
+				             but it was found twice
 
 				             Matching Interactions:
 				             [
@@ -209,6 +209,9 @@ public sealed partial class ThatVerificationResultIs
 					             but it was
 
 					             Matching Interactions:
+					             []
+
+					             All Interactions:
 					             []
 					             """);
 			}

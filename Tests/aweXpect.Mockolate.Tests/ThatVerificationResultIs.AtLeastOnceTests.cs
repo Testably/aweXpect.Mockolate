@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
@@ -42,7 +43,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -148,7 +149,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -206,7 +207,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once within 0:00.050,
-				             but never found it
+				             but it was never found
 
 				             Matching Interactions:
 				             []
@@ -221,6 +222,59 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
+			[Fact]
+			public async Task WhenInvokedInBackground_Within_ShouldFailWhenInvoked()
+			{
+				IMyService sut = IMyService.CreateMock();
+				Task backgroundTask = Task.Delay(50).ContinueWith(_ => sut.MyMethod(1, false));
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)))
+						.DoesNotComplyWith(it => it.AtLeastOnce().Within(30.Seconds()));
+				}
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+				await That(Act).Throws<XunitException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1, false) less than once within 0:30,
+					             but it was found once
+
+					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False)
+					             ]
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1, False)
+					             ]
+					             """)
+					.Because("the inner verification is evaluated non-negated and waits for the interaction");
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the negation fails as soon as the interaction happened");
+
+				await backgroundTask;
+			}
+
+			[Fact]
+			public async Task WhenNotInvoked_Within_ShouldSucceedAfterWaiting()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)))
+						.DoesNotComplyWith(it => it.AtLeastOnce().Within(100.Milliseconds()));
+				}
+
+				Stopwatch stopwatch = Stopwatch.StartNew();
+				await That(Act).DoesNotThrow();
+				await That(stopwatch.Elapsed).IsGreaterThanOrEqualTo(90.Milliseconds())
+					.Because("the inner verification waits the whole time for an interaction that does not happen");
+			}
+
 			[Fact]
 			public async Task WhenInvokedNever_ShouldSucceed()
 			{
@@ -252,9 +306,14 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) less than once,
-					             but found it once
+					             but it was found once
 
 					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False)
+					             ]
+
+					             All Interactions:
 					             [
 					               invoke method MyMethod(1, False)
 					             ]
@@ -279,9 +338,15 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) less than once,
-					             but found it twice
+					             but it was found twice
 
 					             Matching Interactions:
+					             [
+					               invoke method MyMethod(1, False),
+					               invoke method MyMethod(1, False)
+					             ]
+
+					             All Interactions:
 					             [
 					               invoke method MyMethod(1, False),
 					               invoke method MyMethod(1, False)

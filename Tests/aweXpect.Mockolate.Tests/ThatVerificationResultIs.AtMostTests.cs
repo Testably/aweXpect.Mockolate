@@ -71,7 +71,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at most never,
-				              but found it {amountString}
+				              but it was found {amountString}
 
 				              Matching Interactions:
 				              [
@@ -140,7 +140,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at most once,
-				             but found it twice
+				             but it was found twice
 
 				             Matching Interactions:
 				             [
@@ -178,7 +178,7 @@ public sealed partial class ThatVerificationResultIs
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at most {times} times,
-				              but found it {invocationTimes} times
+				              but it was found {invocationTimes} times
 
 				              Matching Interactions:
 				              [
@@ -216,7 +216,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that subject
-				             had the interaction at most twice,
+				             has the interaction at most twice,
 				             but it was <null>
 				             """);
 		}
@@ -236,7 +236,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).Throws<XunitException>()
 					.WithMessage("""
 					             Expected that subject
-					             had the interaction more than twice,
+					             has the interaction more than twice,
 					             but it was <null>
 					             """)
 					.Because("a null subject cannot be verified, so the negation fails as well");
@@ -264,7 +264,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage($"""
 					              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					              invoked method MyMethod(1, false) more than {times} times,
-					              but found it only {invocationTimes} times
+					              but it was found only {invocationTimes} times
 
 					              Matching Interactions:
 					              [
@@ -327,9 +327,12 @@ public sealed partial class ThatVerificationResultIs
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) more than 3 times,
-					             but never found it
+					             but it was never found
 
 					             Matching Interactions:
+					             []
+
+					             All Interactions:
 					             []
 					             """);
 			}

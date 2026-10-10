@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
@@ -30,13 +29,15 @@ public static partial class ThatMockVerify
 		: ConstraintResult.WithNotNullValue<IMockVerify<TVerify>>(it, grammars),
 			IValueConstraint<IMockVerify<TVerify>>
 	{
+		private IReadOnlyCollection<ISetup>? _unusedSetups;
+
 		public ConstraintResult IsMetBy(IMockVerify<TVerify>? actual)
 		{
 			Actual = actual;
-			Outcome = actual is IMock mock &&
-			          mock.MockRegistry.GetUnusedSetups(mock.MockRegistry.Interactions).Count == 0
-				? Outcome.Success
-				: Outcome.Failure;
+			_unusedSetups = actual is IMock mock
+				? mock.MockRegistry.GetUnusedSetups(mock.MockRegistry.Interactions)
+				: null;
+			Outcome = _unusedSetups?.Count == 0 ? Outcome.Success : Outcome.Failure;
 			return this;
 		}
 
@@ -45,27 +46,14 @@ public static partial class ThatMockVerify
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 		{
-			if (Actual is IMock mock)
+			if (_unusedSetups is null)
 			{
-				IReadOnlyCollection<ISetup> unusedSetups =
-					mock.MockRegistry.GetUnusedSetups(mock.MockRegistry.Interactions);
-				stringBuilder.Append("the following ");
-				if (unusedSetups.Count == 1)
-				{
-					stringBuilder.Append("setup was not used:");
-				}
-				else
-				{
-					stringBuilder.Append(unusedSetups.Count)
-						.Append(" setups were not used:");
-				}
-
-				stringBuilder.AppendLine().Append(" - ");
-				stringBuilder.Append(string.Join($"{Environment.NewLine} - ", unusedSetups));
+				stringBuilder.Append(It).Append(" was not a Mockolate mock");
 			}
 			else
 			{
-				stringBuilder.Append("not all were");
+				stringBuilder.Append(It).Append(" had ").Append(_unusedSetups.Count)
+					.Append(_unusedSetups.Count == 1 ? " unused setup" : " unused setups");
 			}
 		}
 
@@ -73,7 +61,16 @@ public static partial class ThatMockVerify
 			=> stringBuilder.Append("has not used all setups");
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
-			=> stringBuilder.Append("all were");
+			=> stringBuilder.Append(It).Append(" did");
+
+		public override void AppendContexts(ResultContextCollector contexts)
+		{
+			if (_unusedSetups is { Count: > 0, } unusedSetups)
+			{
+				contexts.Add(new ResultContext.SyncCallback("Unused Setups",
+					() => Formatter.Format(unusedSetups, FormattingOptions.MultipleLines)));
+			}
+		}
 
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{

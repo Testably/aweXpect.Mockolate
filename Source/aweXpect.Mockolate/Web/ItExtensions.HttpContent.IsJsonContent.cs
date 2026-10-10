@@ -64,7 +64,7 @@ public static class AweXpectItExtensions
 		IJsonContentBodyParameter IgnoringAdditionalProperties(bool ignoreAdditionalProperties = true);
 	}
 
-	private sealed class JsonContentParameter : IJsonContentBodyParameter, IParameter
+	private sealed class JsonContentParameter : IJsonContentBodyParameter
 	{
 		private readonly ItExtensions.IHttpContentParameter _parameter;
 

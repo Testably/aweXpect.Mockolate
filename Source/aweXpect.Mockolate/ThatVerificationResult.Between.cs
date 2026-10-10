@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,21 +17,45 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened between <paramref name="minimum" />…
 	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">
+	///     The <paramref name="minimum" /> or the maximum is negative, or the maximum is less than the
+	///     <paramref name="minimum" />.
+	/// </exception>
 	[GuaranteesNotNull]
 	public static BetweenResult<AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>,
 			Times>
 		Between<TVerify>(this IThat<VerificationResult<TVerify>> subject, int minimum)
 	{
+		if (minimum < 0)
+		{
+			throw Tracing.WriteException(
+				new ArgumentOutOfRangeException(nameof(minimum), "The minimum must not be negative."));
+		}
+
 		WithinOptions options = new();
 		return new
 			BetweenResult<AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>,
-				Times>(maximum
-				=> new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
+				Times>(maximum =>
+			{
+				if (maximum.Value < 0)
+				{
+					throw Tracing.WriteException(
+						new ArgumentOutOfRangeException(nameof(maximum), "The maximum must not be negative."));
+				}
+
+				if (maximum.Value < minimum)
+				{
+					throw Tracing.WriteException(new ArgumentOutOfRangeException(nameof(maximum),
+						"The maximum must be greater than or equal to the minimum."));
+				}
+
+				return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
 					subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
 						=> new HasBetweenConstraint<TVerify>(expectationBuilder, it, grammars, minimum,
 							maximum.Value, options)),
 					subject,
-					options));
+					options);
+			});
 	}
 
 	private sealed class HasBetweenConstraint<TVerify>(

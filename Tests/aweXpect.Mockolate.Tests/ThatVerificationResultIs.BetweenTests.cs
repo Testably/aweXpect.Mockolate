@@ -273,6 +273,54 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
+		[Fact]
+		public async Task WhenMaximumIsLessThanMinimum_ShouldThrowArgumentOutOfRangeException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Between(5).And(2);
+			}
+
+			await That(Act).Throws<ArgumentOutOfRangeException>()
+				.WithParamName("maximum").And
+				.WithMessage("The maximum must be greater than or equal to the minimum.").AsPrefix()
+				.Because("an inverted range is rejected with the same message as in core");
+		}
+
+		[Fact]
+		public async Task WhenMaximumIsNegative_ShouldThrowArgumentOutOfRangeException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Between(0).And(-1);
+			}
+
+			await That(Act).Throws<ArgumentOutOfRangeException>()
+				.WithParamName("maximum").And
+				.WithMessage("The maximum must not be negative.").AsPrefix()
+				.Because("a negative count is rejected with the same message as in core");
+		}
+
+		[Fact]
+		public async Task WhenMinimumIsNegative_ShouldThrowArgumentOutOfRangeException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Between(-1).And(2);
+			}
+
+			await That(Act).Throws<ArgumentOutOfRangeException>()
+				.WithParamName("minimum").And
+				.WithMessage("The minimum must not be negative.").AsPrefix()
+				.Because("a negative count is rejected with the same message as in core");
+		}
+
 		public sealed class NegatedTests
 		{
 			[Theory]

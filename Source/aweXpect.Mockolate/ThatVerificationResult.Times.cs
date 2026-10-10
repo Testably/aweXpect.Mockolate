@@ -18,12 +18,19 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the checked interaction happened according to the <paramref name="predicate" />.
 	/// </summary>
+	/// <exception cref="ArgumentNullException">The <paramref name="predicate" /> is <see langword="null" />.</exception>
 	[GuaranteesNotNull]
 	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>> Times<TVerify>(
 		this IThat<VerificationResult<TVerify>> subject, Func<int, bool> predicate,
 		[CallerArgumentExpression("predicate")]
 		string doNotPopulateThisValue = "")
 	{
+		if (predicate is null)
+		{
+			throw Tracing.WriteException(
+				new ArgumentNullException(nameof(predicate), "The 'predicate' cannot be null."));
+		}
+
 		WithinOptions options = new();
 		return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
 			subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,6 +61,7 @@ public static partial class ThatVerificationResult
 	{
 		private IInteraction[]? _allInteractions;
 		private string? _expectation;
+		private ExceptionDispatchInfo? _lastCheckException;
 		private IInteraction[]? _matchingInteractions;
 
 		protected int Count => _matchingInteractions?.Length ?? 0;
@@ -109,7 +111,7 @@ public static partial class ThatVerificationResult
 			long startTimestamp = context.GetTimestamp();
 			try
 			{
-				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(Check, waitCts.Token));
+				Complete(verificationResult, await asyncVerificationResult.VerifyAsync(CheckWhileWaiting, waitCts.Token));
 			}
 			catch (Exception exception) when (exception is MockVerificationTimeoutException
 				                                  or OperationCanceledException)
@@ -121,8 +123,28 @@ public static partial class ThatVerificationResult
 				}
 				else
 				{
+					_lastCheckException?.Throw();
 					Complete(verificationResult, false);
 				}
+			}
+		}
+
+		/// <remarks>
+		///     Further interactions change the count, so like in core's repeated checks, an exception of the predicate
+		///     counts as not met while waiting for them, and only fails the verification when the last check threw it.
+		/// </remarks>
+		private bool CheckWhileWaiting(IInteraction[] interactions)
+		{
+			try
+			{
+				bool isMet = Check(interactions);
+				_lastCheckException = null;
+				return isMet;
+			}
+			catch (Exception exception)
+			{
+				_lastCheckException = ExceptionDispatchInfo.Capture(exception);
+				return false;
 			}
 		}
 
@@ -140,6 +162,7 @@ public static partial class ThatVerificationResult
 			_expectation = null;
 			_matchingInteractions = null;
 			_allInteractions = null;
+			_lastCheckException = null;
 			if (actual is null)
 			{
 				return false;

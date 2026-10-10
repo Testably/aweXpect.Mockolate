@@ -253,6 +253,22 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
+		[Fact]
+		public async Task WhenTimesIsNegative_ShouldThrowArgumentOutOfRangeException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeast(-1);
+			}
+
+			await That(Act).Throws<ArgumentOutOfRangeException>()
+				.WithParamName("times").And
+				.WithMessage("The minimum must not be negative.").AsPrefix()
+				.Because("a negative count is rejected with the same message as in core");
+		}
+
 		public sealed class NegatedTests
 		{
 			[Theory]

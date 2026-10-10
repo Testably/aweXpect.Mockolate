@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
+using aweXpect.Core.Extending;
 using aweXpect.Helpers;
 using aweXpect.Results;
 using Mockolate;
@@ -19,7 +20,7 @@ public static partial class ThatMockVerify
 	public static AndOrResult<IMockVerify<TVerify>, IThat<IMockVerify<TVerify>>>
 		AllInteractionsAreVerified<TVerify>(
 			this IThat<IMockVerify<TVerify>> subject)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint((it, grammars)
+		=> new(subject.Get().ExpectationBuilder.AddConstraint(static (it, grammars)
 				=> new AllInteractionsAreVerifiedConstraint<TVerify>(it, grammars)),
 			subject);
 

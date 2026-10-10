@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
-using aweXpect.Helpers;
+using aweXpect.Core.Extending;
 using aweXpect.Options;
 using aweXpect.Results;
 using Mockolate.Verify;
@@ -33,9 +33,11 @@ public static partial class ThatVerificationResult
 
 		WithinOptions options = new();
 		return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
-			subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
-				=> new TimesConstraint<TVerify>(expectationBuilder, it, grammars, predicate, doNotPopulateThisValue,
-					options)),
+			subject.Get().ExpectationBuilder.AddConstraint(
+				(Predicate: predicate, Expression: doNotPopulateThisValue, Options: options),
+				static (s, expectationBuilder, it, grammars)
+					=> new TimesConstraint<TVerify>(expectationBuilder, it, grammars, s.Predicate, s.Expression,
+						s.Options)),
 			subject,
 			options);
 	}

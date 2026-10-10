@@ -188,6 +188,22 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
+		public async Task WhenTimesIsNegative_ShouldThrowArgumentOutOfRangeException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtMost(-1);
+			}
+
+			await That(Act).Throws<ArgumentOutOfRangeException>()
+				.WithParamName("times").And
+				.WithMessage("The maximum must not be negative.").AsPrefix()
+				.Because("a negative count is rejected with the same message as in core");
+		}
+
+		[Fact]
 		public async Task WhenSubjectIsNull_ShouldFail()
 		{
 			VerificationResult<IMyService>? subject = null;

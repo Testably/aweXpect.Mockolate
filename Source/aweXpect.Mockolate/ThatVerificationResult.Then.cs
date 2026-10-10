@@ -21,12 +21,22 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the <paramref name="interactions" /> happen after the current interaction in the given order.
 	/// </summary>
+	/// <exception cref="ArgumentNullException">The <paramref name="interactions" /> are <see langword="null" />.</exception>
 	[GuaranteesNotNull]
 	public static AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
 		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
-		=> new(subject.Get().ExpectationBuilder.AddConstraint(interactions,
+	{
+		if (interactions is null)
+		{
+			throw Tracing.WriteException(
+				new ArgumentNullException(nameof(interactions), "The 'interactions' cannot be null."));
+		}
+
+		return new AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>>(
+			subject.Get().ExpectationBuilder.AddConstraint(interactions,
 				static (interactions, it, grammars) => new ThenConstraint<T>(it, grammars, interactions)),
 			subject);
+	}
 
 	private sealed class ThenConstraint<T>(
 		string it,

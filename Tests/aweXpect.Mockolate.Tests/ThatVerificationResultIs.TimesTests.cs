@@ -276,7 +276,7 @@ public sealed partial class ThatVerificationResultIs
 		}
 
 		[Fact]
-		public async Task WhenPredicateThrows_Within_ShouldFailWithoutWaiting()
+		public async Task WhenPredicateStillThrowsAtTheEnd_Within_ShouldFail()
 		{
 			InvalidOperationException exception = new("predicate failed");
 			IMyService sut = IMyService.CreateMock();
@@ -284,14 +284,13 @@ public sealed partial class ThatVerificationResultIs
 			async Task Act()
 			{
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(_ => throw exception)
-					.Within(30.Seconds());
+					.Within(50.Milliseconds());
 			}
 
-			Stopwatch stopwatch = Stopwatch.StartNew();
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
-				             invoked method MyMethod(1, false) according to the predicate _ => throw exception within 0:30,
+				             invoked method MyMethod(1, false) according to the predicate _ => throw exception within 0:00.050,
 				             but the predicate did throw an InvalidOperationException:
 				               predicate failed
 
@@ -299,9 +298,80 @@ public sealed partial class ThatVerificationResultIs
 				             []
 				             """).And
 				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
-				.Because("further interactions cannot make a throwing predicate answer");
+				.Because("the last check still threw, so the expectation fails with its exception");
+		}
+
+		[Fact]
+		public async Task WhenPredicateStillThrowsAtTheEnd_WithTimeout_ShouldFail()
+		{
+			InvalidOperationException exception = new("predicate failed");
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(_ => throw exception)
+					.WithTimeout(50.Milliseconds());
+			}
+
+			await That(Act).Throws<XunitException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) according to the predicate _ => throw exception,
+				             but the predicate did throw an InvalidOperationException:
+				               predicate failed
+
+				             Matching Interactions:
+				             []
+				             """).And
+				.Whose(e => e.InnerException, i => i.IsSameAs(exception))
+				.Because("the timeout also makes the verification wait, and the last check still threw");
+		}
+
+		[Fact]
+		public async Task WhenPredicateThrowsFirstAndIsSatisfiedLater_Within_ShouldSucceed()
+		{
+			IMyService sut = IMyService.CreateMock();
+			TaskCompletionSource<bool> hasThrown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+			Task backgroundTask = hasThrown.Task.ContinueWith(_ => sut.MyMethod(1, false));
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(n =>
+					{
+						if (n == 0)
+						{
+							hasThrown.TrySetResult(true);
+							throw new InvalidOperationException("predicate failed");
+						}
+
+						return n == 1;
+					})
+					.Within(30.Seconds());
+			}
+
+			Stopwatch stopwatch = Stopwatch.StartNew();
+			await That(Act).DoesNotThrow()
+				.Because("an exception of the predicate counts as not met while waiting for further interactions");
 			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
-				.Because("the verification must not wait for further interactions after the predicate threw");
+				.Because("the verification succeeds as soon as the interaction happened");
+
+			await backgroundTask;
+		}
+
+		[Fact]
+		public async Task WhenPredicateIsNull_ShouldThrowArgumentNullException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(null!);
+			}
+
+			await That(Act).Throws<ArgumentNullException>()
+				.WithParamName("predicate").And
+				.WithMessage("The 'predicate' cannot be null.").AsPrefix()
+				.Because("a missing argument fails where it is passed instead of during the evaluation");
 		}
 
 		public sealed class NegatedTests

@@ -271,6 +271,22 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
+		[Fact]
+		public async Task Then_WhenInteractionsAreNull_ShouldThrowArgumentNullException()
+		{
+			IMyService sut = IMyService.CreateMock();
+
+			async Task Act()
+			{
+				await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(null!);
+			}
+
+			await That(Act).Throws<ArgumentNullException>()
+				.WithParamName("interactions").And
+				.WithMessage("The 'interactions' cannot be null.").AsPrefix()
+				.Because("a missing argument fails where it is passed instead of during the evaluation");
+		}
+
 		public sealed class NegatedTests
 		{
 			[Fact]

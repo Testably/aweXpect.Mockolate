@@ -22,8 +22,15 @@ public static class AweXpectItExtensions
 		/// <summary>
 		///     Expects the <see cref="HttpContent" /> to have a body equal to the given <paramref name="json" />.
 		/// </summary>
+		/// <exception cref="ArgumentNullException">The <paramref name="json" /> is <see langword="null" />.</exception>
+		/// <exception cref="ArgumentException">The <paramref name="json" /> is not valid JSON.</exception>
 		public IJsonContentBodyParameter WithJson(string json, JsonDocumentOptions? options = null)
 		{
+			if (json is null)
+			{
+				throw Tracing.WriteException(new ArgumentNullException(nameof(json), "The 'json' cannot be null."));
+			}
+
 			JsonContentParameter jsonContentParameter = new(parameter);
 			jsonContentParameter.WithBody(json, options);
 			parameter.WithString(b => jsonContentParameter.Matches(b));
@@ -69,9 +76,9 @@ public static class AweXpectItExtensions
 	{
 		private readonly ItExtensions.IHttpContentParameter _parameter;
 
-		private string? _body;
+		private JsonElement _expected;
 		private bool _ignoringAdditionalProperties = true;
-		private JsonDocumentOptions? _jsonDocumentOptions;
+		private JsonDocumentOptions _jsonDocumentOptions;
 
 		public JsonContentParameter(ItExtensions.IHttpContentParameter parameter)
 		{
@@ -111,34 +118,35 @@ public static class AweXpectItExtensions
 
 		public bool Matches(string value)
 		{
-			if (_body is not null)
+			try
 			{
-				try
-				{
-					JsonDocumentOptions options = _jsonDocumentOptions ?? GetDefaultOptions();
-					using JsonDocument actualDocument = JsonDocument.Parse(value, options);
-					using JsonDocument expectedDocument = JsonDocument.Parse(_body, options);
-
-					if (!Compare(actualDocument.RootElement, expectedDocument.RootElement,
-						    _ignoringAdditionalProperties))
-					{
-						return false;
-					}
-				}
-				catch (JsonException)
-				{
-					return false;
-				}
+				using JsonDocument actualDocument = JsonDocument.Parse(value, _jsonDocumentOptions);
+				return Compare(actualDocument.RootElement, _expected, _ignoringAdditionalProperties);
 			}
-
-			return true;
+			catch (JsonException)
+			{
+				return false;
+			}
 		}
 
+		/// <remarks>
+		///     The expected body is parsed when the parameter is created, so that invalid JSON fails where the caller
+		///     passes it instead of never matching inside the mocked call.
+		/// </remarks>
 		public void WithBody(string json,
 			JsonDocumentOptions? options = null)
 		{
-			_body = json;
-			_jsonDocumentOptions = options;
+			_jsonDocumentOptions = options ?? GetDefaultOptions();
+			try
+			{
+				using JsonDocument expectedDocument = JsonDocument.Parse(json, _jsonDocumentOptions);
+				_expected = expectedDocument.RootElement.Clone();
+			}
+			catch (JsonException exception)
+			{
+				throw Tracing.WriteException(new ArgumentException(
+					$"The 'json' is not valid JSON: {exception.Message}", nameof(json), exception));
+			}
 		}
 
 		public void WithBodyMatching(object? expected,

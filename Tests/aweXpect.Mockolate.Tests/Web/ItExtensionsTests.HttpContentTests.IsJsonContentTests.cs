@@ -155,7 +155,7 @@ public sealed partial class ItExtensionsTests
 			[Theory]
 			[InlineData("{\n  \"foo\": 1,\n  \"bar\": 2,\n}", "{\"bar\":2,\"foo\": 1}", true)]
 			[InlineData("\"foo\"", "\"foo\"", true)]
-			[InlineData("foo", "bar", false)]
+			[InlineData("foo", "\"foo\"", false)]
 			public async Task WithBody_ShouldCompareAsJson(string body,
 				string expected, bool expectSuccess)
 			{
@@ -233,10 +233,69 @@ public sealed partial class ItExtensionsTests
 					.IsEqualTo(ignoreAdditionalProperties ? HttpStatusCode.OK : HttpStatusCode.NotImplemented);
 			}
 
+			[Fact]
+			public async Task WithJson_WhenActualContentIsInvalid_ShouldNotMatch()
+			{
+				HttpClient httpClient = HttpClient.CreateMock();
+				httpClient.Mock.Setup
+					.PostAsync(It.IsAny<Uri>(), It.IsHttpContent().WithJson("{\"foo\": 1}"))
+					.ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
+
+				HttpResponseMessage result = await httpClient.PostAsync("https://www.aweXpect.com",
+					new StringContent("{\"foo\": "),
+					CancellationToken.None);
+
+				await That(result.StatusCode).IsEqualTo(HttpStatusCode.NotImplemented)
+					.Because("content that is not valid JSON cannot match the expected JSON");
+			}
+
+			[Fact]
+			public async Task WithJson_WhenExpectedIsInvalid_ShouldThrowArgumentException()
+			{
+				void Act()
+				{
+					It.IsHttpContent().WithJson("{\"foo\": ");
+				}
+
+				await That(Act).Throws<ArgumentException>()
+					.WithParamName("json").And
+					.WithMessage("The 'json' is not valid JSON: *").AsWildcard()
+					.Because("invalid expected JSON fails where it is passed instead of never matching");
+			}
+
+			[Fact]
+			public async Task WithJson_WhenExpectedIsInvalidForOptions_ShouldThrowArgumentException()
+			{
+				void Act()
+				{
+					It.IsHttpContent().WithJson("[1, 2,]", new JsonDocumentOptions
+					{
+						AllowTrailingCommas = false,
+					});
+				}
+
+				await That(Act).Throws<ArgumentException>()
+					.WithParamName("json").And
+					.WithMessage("The 'json' is not valid JSON: *").AsWildcard()
+					.Because("the expected JSON is parsed with the given options");
+			}
+
+			[Fact]
+			public async Task WithJson_WhenExpectedIsNull_ShouldThrowArgumentNullException()
+			{
+				void Act()
+				{
+					It.IsHttpContent().WithJson(null!);
+				}
+
+				await That(Act).Throws<ArgumentNullException>()
+					.WithParamName("json").And
+					.WithMessage("The 'json' cannot be null.").AsPrefix()
+					.Because("a missing argument fails where it is passed instead of never matching");
+			}
+
 			[Theory]
 			[InlineData("[1, 2,]", "[1, 2,]", true)]
-			[InlineData("[1, 2,]", "[1, 2,]", false)]
-			[InlineData("[1, 2]", "[1, 2,]", false)]
 			[InlineData("[1, 2,]", "[1, 2]", false)]
 			public async Task WithOptions_ShouldApplyOptions(string body, string expected, bool allowTrailingCommas)
 			{

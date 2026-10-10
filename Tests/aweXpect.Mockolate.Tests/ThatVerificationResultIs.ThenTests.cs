@@ -116,7 +116,7 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
-				             Expected that sut.Mock.Verify.MyMethod(It.Is(1))
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
 				             invoked method MyMethod(2) in order,
 				             but the interaction selector did throw an InvalidOperationException:
@@ -403,7 +403,7 @@ public sealed partial class ThatVerificationResultIs
 
 				await That(Act).Throws<XunitException>()
 					.WithMessage("""
-					             Expected that sut.Mock.Verify.MyMethod(It.Is(1))
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1) not in order,
 					             but the interaction selector did throw an InvalidOperationException:
 					               selector failed

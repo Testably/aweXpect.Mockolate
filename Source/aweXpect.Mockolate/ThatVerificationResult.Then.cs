@@ -56,26 +56,9 @@ public static partial class ThatVerificationResult
 			IInteraction[] snapshot = [];
 			Dictionary<IInteraction, int> positions = new();
 			int after = -1;
-			bool isUndecided = false;
-			bool result;
 			_expectations.Add(verificationResult.Expectation);
-			if (actual is IAsyncVerificationResult asyncVerificationResult)
-			{
-				try
-				{
-					result = await asyncVerificationResult.VerifyAsync(VerifyFirstInteractions, cancellationToken);
-				}
-				catch (Exception exception) when (exception is MockVerificationTimeoutException
-					                                  or OperationCanceledException)
-				{
-					isUndecided = context.Cancellation.Reason is CancellationReason.Caller or CancellationReason.Timeout;
-					result = false;
-				}
-			}
-			else
-			{
-				result = verificationResult.Verify(VerifyFirstInteractions);
-			}
+			(bool result, bool isUndecided) = await VerifyFirst(verificationResult, VerifyFirstInteractions,
+				context, cancellationToken);
 
 			foreach (Func<T, VerificationResult<T>> check in interactions)
 			{
@@ -85,7 +68,15 @@ public static partial class ThatVerificationResult
 				         result;
 			}
 
-			Outcome = isUndecided ? Outcome.Undecided : result ? Outcome.Success : Outcome.Failure;
+			if (isUndecided)
+			{
+				Outcome = Outcome.Undecided;
+			}
+			else
+			{
+				Outcome = result ? Outcome.Success : Outcome.Failure;
+			}
+
 			if (Outcome != Outcome.Success)
 			{
 				_allInteractions = snapshot;
@@ -119,6 +110,27 @@ public static partial class ThatVerificationResult
 				}
 
 				return true;
+			}
+		}
+
+		private static async ValueTask<(bool Result, bool IsUndecided)> VerifyFirst(
+			IVerificationResult verificationResult, Func<IInteraction[], bool> predicate,
+			IEvaluationContext context, CancellationToken cancellationToken)
+		{
+			if (verificationResult is not IAsyncVerificationResult asyncVerificationResult)
+			{
+				return (verificationResult.Verify(predicate), false);
+			}
+
+			try
+			{
+				return (await asyncVerificationResult.VerifyAsync(predicate, cancellationToken), false);
+			}
+			catch (Exception exception) when (exception is MockVerificationTimeoutException
+				                                  or OperationCanceledException)
+			{
+				return (false,
+					context.Cancellation.Reason is CancellationReason.Caller or CancellationReason.Timeout);
 			}
 		}
 

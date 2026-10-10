@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using aweXpect.Core;
 using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
-using aweXpect.Helpers;
+using aweXpect.Core.Extending;
 using aweXpect.Options;
 using aweXpect.Results;
 using Mockolate.Verify;
@@ -50,9 +50,11 @@ public static partial class ThatVerificationResult
 				}
 
 				return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
-					subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
-						=> new HasBetweenConstraint<TVerify>(expectationBuilder, it, grammars, minimum,
-							maximum.Value, options)),
+					subject.Get().ExpectationBuilder.AddConstraint(
+						(Minimum: minimum, Maximum: maximum.Value, Options: options),
+						static (s, expectationBuilder, it, grammars)
+							=> new HasBetweenConstraint<TVerify>(expectationBuilder, it, grammars, s.Minimum,
+								s.Maximum, s.Options)),
 					subject,
 					options);
 			});

@@ -1,6 +1,6 @@
 using System;
 using aweXpect.Core;
-using aweXpect.Helpers;
+using aweXpect.Core.Extending;
 using aweXpect.Results;
 using Mockolate.Verify;
 
@@ -23,8 +23,8 @@ public static partial class ThatVerificationResult
 		}
 
 		return new AndOrResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
-			subject.Get().ExpectationBuilder.AddConstraint((expectationBuilder, it, grammars)
-				=> new HasAtMostConstraint<TVerify>(expectationBuilder, it, grammars, times.Value)),
+			subject.Get().ExpectationBuilder.AddConstraint(times.Value, static (t, expectationBuilder, it, grammars)
+				=> new HasAtMostConstraint<TVerify>(expectationBuilder, it, grammars, t)),
 			subject);
 	}
 }

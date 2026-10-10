@@ -261,7 +261,7 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
-				             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate _ => throw exception,
 				             but the predicate did throw an InvalidOperationException:
 				               predicate failed
@@ -290,7 +290,7 @@ public sealed partial class ThatVerificationResultIs
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			await That(Act).Throws<XunitException>()
 				.WithMessage("""
-				             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate _ => throw exception within 0:30,
 				             but the predicate did throw an InvalidOperationException:
 				               predicate failed
@@ -366,7 +366,7 @@ public sealed partial class ThatVerificationResultIs
 
 				await That(Act).Throws<XunitException>()
 					.WithMessage("""
-					             Expected that sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) not according to the predicate _ => throw exception,
 					             but the predicate did throw an InvalidOperationException:
 					               predicate failed

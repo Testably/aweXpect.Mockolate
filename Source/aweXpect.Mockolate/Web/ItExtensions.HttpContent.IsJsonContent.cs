@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using aweXpect.Core;
 using Mockolate.Parameters;
 
 // ReSharper disable once CheckNamespace
@@ -142,11 +143,26 @@ public static class AweXpectItExtensions
 
 		public void WithBodyMatching(object? expected,
 			JsonDocumentOptions? options = null)
-			=> WithBody(JsonSerializer.Serialize(expected, JsonSerializerOptions.Default), options);
+			=> WithBody(Serialize(expected), options);
 
 		public void WithBodyMatching<T>(IEnumerable<T> expected,
 			JsonDocumentOptions? options = null)
-			=> WithBody(JsonSerializer.Serialize<object>(expected, JsonSerializerOptions.Default), options);
+			=> WithBody(Serialize(expected), options);
+
+		/// <remarks>
+		///     The expected value is serialized when the parameter is created, so that a missing reflection fallback
+		///     fails where the caller passes the value instead of inside the mocked call.
+		/// </remarks>
+		private static string Serialize(object? expected)
+		{
+			if (!ReflectionFallback.IsSupported)
+			{
+				throw Tracing.WriteException(new NotSupportedException(
+					"The expected value cannot be serialized to JSON by reflection, which is switched off when publishing with trimming or Native AOT enabled. Pass the expected JSON as a string to WithJson instead. Alternatively, set the runtime switch 'aweXpect.ReflectionFallback.IsSupported' to true to reflect anyway."));
+			}
+
+			return JsonSerializer.Serialize(expected, JsonSerializerOptions.Default);
+		}
 
 		private static JsonDocumentOptions GetDefaultOptions() => new()
 		{

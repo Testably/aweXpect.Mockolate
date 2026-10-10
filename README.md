@@ -138,6 +138,9 @@ httpClient.Mock.Setup
     .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
 ```
 
+`WithJsonMatching` serializes the expected value by reflection, which is switched off when publishing with trimming or
+Native AOT enabled, so use `WithJson` with the expected JSON as a string there.
+
 By default, additional properties in the actual JSON are ignored. Use `IgnoringAdditionalProperties(false)` to require
 an exact match:
 

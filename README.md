@@ -56,7 +56,7 @@ When the track was played twice, `Once()` fails with:
 ```text title="Failure message"
 Expected that the MusicStore.IPlayer mock
 invoked method Play(Let It Be) exactly once,
-but found it twice
+but it was found twice
 
 Matching Interactions:
 [
@@ -96,7 +96,7 @@ When the interaction does not happen in time, e.g. a `Stop()` expected within 10
 ```text title="Failure message"
 Expected that the MusicStore.IPlayer mock
 invoked method Stop() at least once within 0:00.100,
-but never found it
+but it was never found
 
 Matching Interactions:
 []
@@ -114,6 +114,28 @@ failing it, so use `Within` to limit how long the verification waits:
 ```csharp
 await Expect.That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().WithCancellation(token);
 ```
+
+Unlike other aweXpect expectations, these verifications also wait for the interaction when only `WithTimeout` or
+`WithCancellation` is given: the timeout or the token bounds how long they wait, and the verification fails when the
+timeout elapses. `Within` sets an explicit wait, which is shown in the expectation; a shorter `WithTimeout` still ends
+it early with "it did not finish within …".
+
+A `Times` predicate that throws counts as not met while waiting, so the verification waits for further interactions,
+and only fails with the exception when the predicate still throws at the end. A selector of `Then` that throws fails the
+verification immediately.
+
+### Waiting for an interaction not to happen
+
+`DoesNotComplyWith` evaluates the verification inside it non-negated, so put `Within` on the verification inside it to
+verify that an interaction does not happen within the given time. It waits the whole time and fails as soon as the
+interaction happens:
+
+```csharp
+await Expect.That(player.Mock.Verify.Stop()).DoesNotComplyWith(it => it.AtLeastOnce().Within(TimeSpan.FromSeconds(1)));
+```
+
+`Within` on `DoesNotComplyWith` itself does not help here: it only checks again until the interaction is not found, so
+it succeeds immediately when the interaction did not happen yet.
 
 ## Interaction order
 
@@ -166,8 +188,12 @@ The verification of `Play` covers both tracks, but `Stop()` was never verified:
 ```text title="Failure message"
 Expected that the MusicStore.IPlayer mock
 has all interactions verified,
-but the following interaction was not verified:
- - invoke method Stop()
+but it had 1 unverified interaction
+
+Unverified Interactions:
+[
+  invoke method Stop()
+]
 ```
 
 ## All setups are used
@@ -187,8 +213,12 @@ await Expect.That(player.Mock.Verify).AllSetupsAreUsed();
 ```text title="Failure message"
 Expected that the MusicStore.IPlayer mock
 has used all setups,
-but the following setup was not used:
- - bool Play("Yesterday")
+but it had 1 unused setup
+
+Unused Setups:
+[
+  bool Play("Yesterday")
+]
 ```
 
 ## HTTP content matchers

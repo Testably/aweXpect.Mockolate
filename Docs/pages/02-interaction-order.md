@@ -1,6 +1,14 @@
 # Interaction order
 
+Describes the possible expectations for verifying the order of interactions with a mock.
+
+| Expectation      | Negated | Summary                                      |
+|------------------|---------|----------------------------------------------|
+| [`Then`](#order) |         | the interactions happened in the given order |
+
 The samples use the `IPlayer` interface from [Interaction count](./01-interaction-count.md).
+
+## Order
 
 You can verify that methods were invoked in a specific order:
 

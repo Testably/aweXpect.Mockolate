@@ -1,5 +1,13 @@
 # All interactions and setups
 
+Describes the possible expectations for verifying that all interactions with a mock were verified and all its setups
+were used.
+
+| Expectation                                                    | Negated | Summary                                      |
+|----------------------------------------------------------------|---------|----------------------------------------------|
+| [`AllInteractionsAreVerified`](#all-interactions-are-verified) |         | every interaction with the mock was verified |
+| [`AllSetupsAreUsed`](#all-setups-are-used)                     |         | every setup of the mock was used             |
+
 The samples use the `IPlayer` interface from [Interaction count](./01-interaction-count.md).
 
 ## All interactions are verified

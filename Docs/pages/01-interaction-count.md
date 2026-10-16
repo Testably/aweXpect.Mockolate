@@ -1,5 +1,22 @@
 # Interaction count
 
+Describes the possible expectations for verifying how often an interaction with a mock happened.
+
+| Expectation                               | Negated | Summary                                                     |
+|-------------------------------------------|---------|-------------------------------------------------------------|
+| [`Once`](#number-of-interactions)         |         | the interaction happened exactly once                       |
+| [`Twice`](#number-of-interactions)        |         | the interaction happened exactly twice                      |
+| [`Never`](#number-of-interactions)        |         | the interaction never happened                              |
+| [`AtLeastOnce`](#number-of-interactions)  |         | the interaction happened at least once                      |
+| [`AtLeastTwice`](#number-of-interactions) |         | the interaction happened at least twice                     |
+| [`AtLeast`](#number-of-interactions)      |         | the interaction happened at least the given number of times |
+| [`AtMostOnce`](#number-of-interactions)   |         | the interaction happened at most once                       |
+| [`AtMostTwice`](#number-of-interactions)  |         | the interaction happened at most twice                      |
+| [`AtMost`](#number-of-interactions)       |         | the interaction happened at most the given number of times  |
+| [`Exactly`](#number-of-interactions)      |         | the interaction happened exactly the given number of times  |
+| [`Between`](#number-of-interactions)      |         | the number of interactions is in the given range            |
+| [`Times`](#number-of-interactions)        |         | the number of interactions satisfies a predicate            |
+
 The samples use the following interface:
 
 ```csharp
@@ -10,6 +27,8 @@ public interface IPlayer
     void Stop();
 }
 ```
+
+## Number of interactions
 
 You can verify how often a method was invoked:
 
@@ -52,8 +71,8 @@ All Interactions:
 With `Within(TimeSpan timeout)`, you can verify that the expected number of interactions happens within the given
 time. This is useful for interactions that happen asynchronously in the background.
 
-`Within` and `WithCancellation` are available on `AtLeast…`, `Once`, `Twice`, `Exactly`, `Between` and `Times`. They
-are not available on `Never` or `AtMost…`, since an upper bound cannot be confirmed by waiting longer.
+`Within` is available on `AtLeast…`, `Once`, `Twice`, `Exactly`, `Between` and `Times`. It is not available on `Never`
+or `AtMost…`, since an upper bound cannot be confirmed by waiting longer.
 
 ```csharp
 IPlayer player = IPlayer.CreateMock();
@@ -84,21 +103,27 @@ All Interactions:
 ```
 
 Instead of a fixed time span, you can also provide a `CancellationToken` to wait for the expected interactions until
-it is canceled. Like for all aweXpect expectations, a cancellation leaves the expectation inconclusive instead of
-failing it, so use `Within` to limit how long the verification waits:
+it is canceled. Like for all aweXpect expectations, a cancellation leaves the expectation
+[inconclusive](https://docs.testably.org/aweXpect/how-it-works/time-and-cancellation#outcome) instead of failing it,
+so use `Within` to limit how long the verification waits:
 
 ```csharp
 await Expect.That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().WithCancellation(token);
 ```
 
-Unlike other aweXpect expectations, these verifications also wait for the interaction when only `WithTimeout` or
-`WithCancellation` is given: the timeout or the token bounds how long they wait, and the verification fails when the
-timeout elapses. `Within` sets an explicit wait, which is shown in the expectation; a shorter `WithTimeout` still ends
-it early with "it did not finish within …".
+:::info[Waiting without `Within`]
+Unlike [other aweXpect expectations](https://docs.testably.org/aweXpect/how-it-works/time-and-cancellation#waiting),
+these verifications also wait for the interaction when only `WithTimeout` or `WithCancellation` is given: the timeout
+or the token bounds how long they wait, and the verification fails when the timeout elapses. `Within` sets an explicit
+wait, which is shown in the expectation; a shorter `WithTimeout` still ends it early with "it did not finish
+within …".
+:::
 
+:::note
 A `Times` predicate that throws counts as not met while waiting, so the verification waits for further interactions,
 and only fails with the exception when the predicate still throws at the end. A selector of
-[`Then`](./02-interaction-order.md) that throws fails the verification immediately.
+[`Then`](./02-interaction-order.md#order) that throws fails the verification immediately.
+:::
 
 ## Waiting for an interaction not to happen
 
@@ -110,5 +135,7 @@ interaction happens:
 await Expect.That(player.Mock.Verify.Stop()).DoesNotComplyWith(it => it.AtLeastOnce().Within(TimeSpan.FromSeconds(1)));
 ```
 
+:::warning
 `Within` on `DoesNotComplyWith` itself does not help here: it only checks again until the interaction is not found, so
 it succeeds immediately when the interaction did not happen yet.
+:::

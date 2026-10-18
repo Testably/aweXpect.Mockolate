@@ -60,8 +60,9 @@ All Interactions:
 | [`AllInteractionsAreVerified`](Docs/pages/03-interactions-and-setups.md#all-interactions-are-verified) | every interaction with the mock was verified                |
 | [`AllSetupsAreUsed`](Docs/pages/03-interactions-and-setups.md#all-setups-are-used)                     | every setup of the mock was used                            |
 
-Verifications of a minimum number of interactions can wait for interactions that happen in the background with
-`Within(timeout)`, see [Waiting for interactions](Docs/pages/01-interaction-count.md#waiting-for-interactions).
+Verifications of a minimum number of interactions and of their order can wait for interactions that happen in the
+background with `Within(timeout)`, see [Waiting for interactions](Docs/pages/01-interaction-count.md#waiting-for-interactions)
+and [Interaction order](Docs/pages/02-interaction-order.md#waiting-for-interactions).
 
 ## Documentation
 

@@ -72,7 +72,8 @@ With `Within(TimeSpan timeout)`, you can verify that the expected number of inte
 time. This is useful for interactions that happen asynchronously in the background.
 
 `Within` is available on `AtLeast…`, `Once`, `Twice`, `Exactly`, `Between` and `Times`. It is not available on `Never`
-or `AtMost…`, since an upper bound cannot be confirmed by waiting longer.
+or `AtMost…`, since an upper bound cannot be confirmed by waiting longer. For the order of interactions, see
+[`Then`](./02-interaction-order.md#waiting-for-interactions).
 
 ```csharp
 IPlayer player = IPlayer.CreateMock();

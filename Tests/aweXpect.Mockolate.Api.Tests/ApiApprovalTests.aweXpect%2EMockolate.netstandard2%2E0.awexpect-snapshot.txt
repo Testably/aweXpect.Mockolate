@@ -32,7 +32,7 @@ namespace aweXpect
         [aweXpect.Core.GuaranteesNotNull]
         public static aweXpect.Results.AndOrWithinResult<Mockolate.Verify.VerificationResult<TVerify>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>>> Once<TVerify>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>> subject) { }
         [aweXpect.Core.GuaranteesNotNull]
-        public static aweXpect.Results.AndOrResult<Mockolate.Verify.VerificationResult<T>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<T>>> Then<T>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<T>> subject, params System.Func<T, Mockolate.Verify.VerificationResult<T>>[] interactions) { }
+        public static aweXpect.Results.AndOrWithinResult<Mockolate.Verify.VerificationResult<T>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<T>>> Then<T>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<T>> subject, params System.Func<T, Mockolate.Verify.VerificationResult<T>>[] interactions) { }
         [aweXpect.Core.GuaranteesNotNull]
         public static aweXpect.Results.AndOrWithinResult<Mockolate.Verify.VerificationResult<TVerify>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>>> Times<TVerify>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>> subject, System.Func<int, bool> predicate, [System.Runtime.CompilerServices.CallerArgumentExpression("predicate")] string doNotPopulateThisValue = "") { }
         [aweXpect.Core.GuaranteesNotNull]

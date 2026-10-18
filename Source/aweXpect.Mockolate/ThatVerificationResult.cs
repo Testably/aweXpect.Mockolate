@@ -52,6 +52,14 @@ public static partial class ThatVerificationResult
 		}
 	}
 
+	private static bool IsInconclusive(EvaluationCancellation cancellation, TimeSpan? timeout, TimeSpan waited)
+		=> cancellation.Reason switch
+		{
+			CancellationReason.Caller => true,
+			CancellationReason.Timeout => timeout is null || !cancellation.HasWaitElapsed(timeout.Value, waited),
+			_ => false,
+		};
+
 	/// <remarks>
 	///     The constraint is evaluated again for every item of a collection, so each evaluation resets the state that the
 	///     failure message reads.
@@ -145,14 +153,6 @@ public static partial class ThatVerificationResult
 				return false;
 			}
 		}
-
-		private static bool IsInconclusive(EvaluationCancellation cancellation, TimeSpan? timeout, TimeSpan waited)
-			=> cancellation.Reason switch
-			{
-				CancellationReason.Caller => true,
-				CancellationReason.Timeout => timeout is null || !cancellation.HasWaitElapsed(timeout.Value, waited),
-				_ => false,
-			};
 
 		private bool Start([NotNullWhen(true)] VerificationResult<TVerify>? actual)
 		{

@@ -22,18 +22,19 @@ public sealed class ApiApprovalTests
 		"aweXpect.Mockolate",
 	];
 
-	[Theory]
-	[MemberData(nameof(Builds))]
+	[Test]
+	[MethodDataSource(nameof(Builds))]
 	public async Task VerifyPublicApi(string assemblyName, string framework)
 		=> await MatchesPublicApiSnapshot(assemblyName, framework);
 
 	/// <summary>
 	///     Execute this test to update the expected public API to the current API surface.
 	/// </summary>
-	[Fact(Explicit = true)]
+	[Test]
+	[Explicit]
 	public async Task AcceptApiChanges()
 	{
-		foreach ((string assemblyName, string framework) in GetBuilds())
+		foreach ((string assemblyName, string framework) in Builds())
 		{
 			try
 			{
@@ -46,17 +47,6 @@ public sealed class ApiApprovalTests
 		}
 	}
 
-	public static TheoryData<string, string> Builds()
-	{
-		TheoryData<string, string> theoryData = new();
-		foreach ((string assemblyName, string framework) in GetBuilds())
-		{
-			theoryData.Add(assemblyName, framework);
-		}
-
-		return theoryData;
-	}
-
 	/// <summary>
 	///     The snapshot is named after the assembly and the target framework, so that both tests use the same one.
 	/// </summary>
@@ -65,7 +55,7 @@ public sealed class ApiApprovalTests
 		=> That(Helper.GetAssemblyFile(framework, assemblyName))
 			.MatchesPublicApiSnapshot(callerMemberName: assemblyName).Named(framework);
 
-	private static IEnumerable<(string, string)> GetBuilds()
+	public static IEnumerable<(string, string)> Builds()
 		=> AssemblyNames.SelectMany(assemblyName => Helper.GetTargetFrameworks()
 			.Select(framework => (assemblyName, framework)));
 }

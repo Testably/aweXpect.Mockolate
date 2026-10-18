@@ -13,25 +13,28 @@ The solution contains the library, the tests, the AOT smoke tests, the benchmark
 ## Tests
 
 ```powershell
-dotnet test Tests/aweXpect.Mockolate.Tests -f net10.0
-dotnet test Tests/aweXpect.Mockolate.Tests -f net10.0 --filter "FullyQualifiedName~OnceTests"
-dotnet test Tests/aweXpect.Mockolate.Tests -f net48
+dotnet test
+dotnet test --project Tests/aweXpect.Mockolate.Tests --framework net10.0
+dotnet test --project Tests/aweXpect.Mockolate.Tests --framework net10.0 --treenode-filter "/*/*/*OnceTests/*"
+dotnet test --project Tests/aweXpect.Mockolate.Tests --framework net48
 ```
 
-- `Tests/aweXpect.Mockolate.Tests` targets `net10.0`, `net8.0` and `net48`. It uses xunit v2 on .NET and xunit v3 on `net48`. `net48` runs only on Windows; the pipeline skips it elsewhere.
-- Test classes are nested by subject and expectation (`ThatVerificationResultIs.OnceTests`) and mostly named `When..._Should...`. Failure messages are pinned with `Throws<XunitException>().WithMessage("""...""")`.
+- All tests use TUnit and are executables of the Microsoft.Testing.Platform, which `global.json` selects for `dotnet test`. `--treenode-filter "/<assembly>/<namespace>/<class>/<test>"` selects tests, with `*` as wildcard. A single project can also be started with `dotnet run --project <project> -f <framework>`.
+- `Tests/aweXpect.Mockolate.Tests` targets `net10.0`, `net8.0` and `net48`. `net48` runs only on Windows; the pipeline skips it elsewhere.
+- Test classes are nested by subject and expectation (`ThatVerificationResultIs.OnceTests`) and mostly named `When..._Should...`. Failure messages are pinned with `Throws<FailException>().WithMessage("""...""")`; a canceled verification throws TUnit's `InconclusiveTestException`.
 - Tests that wait for background interactions use `Within(...)` with generous timeouts and `aweXpect.Chronology` helpers such as `30.Seconds()`.
 
 ## Public API
 
 ```powershell
-dotnet test Tests/aweXpect.Mockolate.Api.Tests
-$env:AWEXPECT_ACCEPT_SNAPSHOTS = 'all'; dotnet test Tests/aweXpect.Mockolate.Api.Tests; Remove-Item Env:AWEXPECT_ACCEPT_SNAPSHOTS
+dotnet test --project Tests/aweXpect.Mockolate.Api.Tests
+dotnet test --project Tests/aweXpect.Mockolate.Api.Tests --treenode-filter "/*/*/ApiApprovalTests/AcceptApiChanges"
+$env:AWEXPECT_ACCEPT_SNAPSHOTS = 'all'; dotnet test --project Tests/aweXpect.Mockolate.Api.Tests; Remove-Item Env:AWEXPECT_ACCEPT_SNAPSHOTS
 ```
 
 - The tests use `aweXpect.Snapshots.PublicApi` to compare the public API of every target framework listed in `Source/Directory.Build.props` with `ApiApprovalTests.aweXpect%2EMockolate.<tfm>.awexpect-snapshot.txt`.
 - Building the test project also builds every target framework of the library (`BuildAllTargetFrameworksOfReferencedProjects`), so the snapshots stay in sync with the configuration (Debug or Release) of the test run.
-- Accept an intended change with the environment variable above, by running the explicit `AcceptApiChanges` test, or by renaming the pending snapshot next to the test file. Review the snapshot diff before committing it.
+- Accept an intended change with the environment variable above, by running the explicit `AcceptApiChanges` test (only with the filter above; a run without it skips the test), or by renaming the pending snapshot next to the test file. Review the snapshot diff before committing it.
 
 ## AOT smoke tests
 
@@ -52,12 +55,13 @@ dotnet run --project Tests/aweXpect.Mockolate.Aot
 | Target | Purpose |
 |--------|---------|
 | `Compile` | Cleans `Artifacts/` and `TestResults/`, restores and builds the solution with the GitVersion version |
-| `UnitTests` | Runs `aweXpect.Mockolate.Tests` for every target framework with coverage |
-| `CodeCoverage` | `UnitTests` plus an OpenCover report in `TestResults/reports` |
-| `ApiChecks` | Runs `aweXpect.Mockolate.Api.Tests` |
+| `UnitTests` | Runs `aweXpect.Mockolate.Tests` with `dotnet run` for every target framework (`net48` only on Windows) and writes `TestResults/<project>_<tfm>.trx` and `.cobertura.xml` |
+| `CodeCoverage` | `UnitTests` plus a SonarQube coverage report in `TestResults/reports` |
+| `ApiChecks` | Runs `aweXpect.Mockolate.Api.Tests` and writes `TestResults/aweXpect.Mockolate.Api.Tests.trx` |
 | `AotSmokeTests` | Runs the smoke tests under the JIT and published with Native AOT |
-| `MutationTests` | Runs Stryker on the library with `aweXpect.Mockolate.Tests` (`net8.0`), only on changes since `main` outside `main` |
-| `MutationTestDashboard` | Uploads the Stryker report and comments on the pull request (CI only) |
+| `MutationTests` | Runs Stryker (the version of the `PackageDownload` in `Pipeline/Build.csproj`, `--test-runner mtp`) on the library with the unit and API tests (`net8.0`), only on changes since `main` outside `main` |
+| `MutationTestsDashboard` | Uploads the Stryker report to the dashboard (CI only) |
+| `MutationTestsComment` | Comments the mutation results on the pull request (CI only) |
 | `Benchmarks` | Builds and runs the benchmarks in Release and logs the GitHub report |
 | `BenchmarkComment` | Comments the benchmark results on the pull request (CI only) |
 | `CodeAnalysis` | SonarCloud analysis around `Compile` and `CodeCoverage` (needs `SonarToken`) |

@@ -1,5 +1,4 @@
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -7,7 +6,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class AtMostTwiceTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreThanTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -22,7 +21,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtMostTwice();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at most twice,
@@ -45,7 +44,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedNever_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -58,7 +57,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedOnce_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -73,7 +72,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedTwice_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();

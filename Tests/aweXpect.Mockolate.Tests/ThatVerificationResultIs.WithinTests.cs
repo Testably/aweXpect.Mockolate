@@ -8,7 +8,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class WithinTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenSpecifiedTwice_ShouldThrowInvalidOperationException()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -24,7 +24,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the second timeout would silently replace the first one");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenTimeoutIsInfinite_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -39,7 +39,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("an infinite timeout imposes no limit, like in core");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenTimeoutIsNegative_ShouldThrowArgumentOutOfRangeException()
 		{
 			IMyService sut = IMyService.CreateMock();

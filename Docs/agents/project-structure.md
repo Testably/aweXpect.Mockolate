@@ -5,8 +5,8 @@
 | Path | Content |
 |------|---------|
 | `Source/aweXpect.Mockolate/` | The library and the only shipped package |
-| `Tests/aweXpect.Mockolate.Tests/` | Unit tests (xunit, `net10.0`, `net8.0`, `net48`) |
-| `Tests/aweXpect.Mockolate.Api.Tests/` | Public API snapshot tests (`net8.0`, covers all library target frameworks) |
+| `Tests/aweXpect.Mockolate.Tests/` | Unit tests (TUnit, `net10.0`, `net8.0`, `net48`) |
+| `Tests/aweXpect.Mockolate.Api.Tests/` | Public API snapshot tests (TUnit, `net8.0`, covers all library target frameworks) |
 | `Tests/aweXpect.Mockolate.Aot/` | Native AOT smoke tests as a console application (`net10.0`) |
 | `Benchmarks/aweXpect.Mockolate.Benchmarks/` | BenchmarkDotNet benchmarks (`net10.0`) |
 | `Pipeline/` | Fallout build project; one `Build.<Area>.cs` file per group of targets |

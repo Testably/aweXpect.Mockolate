@@ -1,6 +1,5 @@
 using Mockolate;
 using Mockolate.Verify;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -8,7 +7,7 @@ public sealed partial class ThatMockVerifyIs
 {
 	public sealed class AllSetupsAreUsedTests
 	{
-		[Fact]
+		[Test]
 		public async Task Negated_WhenAllSetupsAreUsed_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -22,7 +21,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).DoesNotComplyWith(it => it.AllSetupsAreUsed());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has not used all setups,
@@ -30,7 +29,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task Negated_WhenSubjectIsNull_ShouldThrow()
 		{
 			IMockVerify<IMyService>? subject = null;
@@ -40,7 +39,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(subject!).DoesNotComplyWith(it => it.AllSetupsAreUsed());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the ThatMockVerifyIs.IMyService mock
 				             has not used all setups,
@@ -49,7 +48,7 @@ public sealed partial class ThatMockVerifyIs
 				.Because("a null subject cannot be verified, so the negation fails as well");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenSubjectIsNull_ShouldThrow()
 		{
 			IMockVerify<IMyService>? subject = null;
@@ -59,7 +58,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(subject!).AllSetupsAreUsed();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the ThatMockVerifyIs.IMyService mock
 				             has used all setups,
@@ -67,7 +66,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenAllInvocationsWereVerified_ShouldNotThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -84,7 +83,7 @@ public sealed partial class ThatMockVerifyIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenMultipleSetupsAreNotUsed_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -99,7 +98,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).AllSetupsAreUsed();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has used all setups,
@@ -113,7 +112,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenOneSetupIsNotUsed_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -127,7 +126,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).AllSetupsAreUsed();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has used all setups,

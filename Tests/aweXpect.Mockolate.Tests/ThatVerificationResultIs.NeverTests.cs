@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -10,7 +9,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class NeverTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreThanTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -25,7 +24,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
@@ -48,7 +47,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvoked_WithCancellation_ShouldFailWithoutWaiting()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -61,7 +60,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never().WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
@@ -80,7 +79,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("further interactions cannot satisfy Never, so the cancellation token must not make it wait");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvoked_WithTimeout_ShouldFailWithoutWaiting()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -93,7 +92,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never().WithTimeout(30.Seconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
@@ -113,7 +112,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("further interactions cannot satisfy Never, so the timeout must not make it wait");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedNever_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -126,7 +125,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedOnce_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -138,7 +137,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
@@ -156,7 +155,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -169,7 +168,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Never();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             never invoked method MyMethod(1, false),
@@ -191,7 +190,7 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Fact]
+			[Test]
 			public async Task WhenInvokedNever_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -202,7 +201,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.Never());
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) at least once,
@@ -216,7 +215,7 @@ public sealed partial class ThatVerificationResultIs
 					             """);
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInvokedOnce_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();

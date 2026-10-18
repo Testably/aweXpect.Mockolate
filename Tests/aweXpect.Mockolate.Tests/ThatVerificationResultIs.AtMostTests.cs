@@ -3,7 +3,7 @@ using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
 using Mockolate.Verify;
-using Xunit.Sdk;
+using TUnit.Core.Exceptions;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -11,7 +11,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class AtMost
 	{
-		[Fact]
+		[Test]
 		public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -28,7 +28,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<InconclusiveException>()
+			await That(Act).Throws<InconclusiveTestException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at most once,
@@ -50,9 +50,9 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 		}
 
-		[Theory]
-		[InlineData(1, "once")]
-		[InlineData(2, "twice")]
+		[Test]
+		[Arguments(1, "once")]
+		[Arguments(2, "twice")]
 		public async Task WhenExpectedNeverButInvoked_ShouldFail(int invocationTimes, string amountString)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -67,7 +67,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtMost(0);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at most never,
@@ -80,10 +80,10 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
-		[Theory]
-		[InlineData(3)]
-		[InlineData(6)]
-		[InlineData(18)]
+		[Test]
+		[Arguments(3)]
+		[Arguments(6)]
+		[Arguments(18)]
 		public async Task WhenInvokedAtMostTheSameTimes_ShouldSucceed(int times)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -101,10 +101,10 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Theory]
-		[InlineData(2, 0)]
-		[InlineData(4, 3)]
-		[InlineData(8, 6)]
+		[Test]
+		[Arguments(2, 0)]
+		[Arguments(4, 3)]
+		[Arguments(8, 6)]
 		public async Task WhenInvokedFewerTimes_ShouldSucceed(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -122,7 +122,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreOften_AwaitableSubject_ShouldFailAfterTimeoutOfSubject()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -136,7 +136,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false)).Within(50.Milliseconds())).AtMost(1);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at most once,
@@ -157,9 +157,9 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Theory]
-		[InlineData(3, 4)]
-		[InlineData(6, 8)]
+		[Test]
+		[Arguments(3, 4)]
+		[Arguments(6, 8)]
 		public async Task WhenInvokedMoreOften_ShouldFail(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -174,7 +174,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtMost(times);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at most {times} times,
@@ -187,7 +187,7 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenTimesIsNegative_ShouldThrowArgumentOutOfRangeException()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -203,7 +203,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("a negative count is rejected with the same message as in core");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenSubjectIsNull_ShouldFail()
 		{
 			VerificationResult<IMyService>? subject = null;
@@ -213,7 +213,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject!).AtMost(2);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that subject
 				             has the interaction at most twice,
@@ -223,7 +223,7 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Fact]
+			[Test]
 			public async Task WhenSubjectIsNull_ShouldFail()
 			{
 				VerificationResult<IMyService>? subject = null;
@@ -233,7 +233,7 @@ public sealed partial class ThatVerificationResultIs
 					await That(subject!).DoesNotComplyWith(it => it.AtMost(2));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that subject
 					             has the interaction more than twice,
@@ -242,9 +242,9 @@ public sealed partial class ThatVerificationResultIs
 					.Because("a null subject cannot be verified, so the negation fails as well");
 			}
 
-			[Theory]
-			[InlineData(4, 3)]
-			[InlineData(6, 4)]
+			[Test]
+			[Arguments(4, 3)]
+			[Arguments(6, 4)]
 			public async Task WhenInvokedAtMostExpected_ShouldFail(int times, int invocationTimes)
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -260,7 +260,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.AtMost(times));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage($"""
 					              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					              invoked method MyMethod(1, false) more than {times} times,
@@ -273,7 +273,7 @@ public sealed partial class ThatVerificationResultIs
 					              """).AsWildcard();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInvokedMoreThanExpected_AwaitableSubject_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -291,9 +291,9 @@ public sealed partial class ThatVerificationResultIs
 					.Because("the timeout of the subject fails the verification, which satisfies the negation");
 			}
 
-			[Theory]
-			[InlineData(3, 4)]
-			[InlineData(6, 8)]
+			[Test]
+			[Arguments(3, 4)]
+			[Arguments(6, 8)]
 			public async Task WhenInvokedMoreThanExpected_ShouldSucceed(int times, int invocationTimes)
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -312,7 +312,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).DoesNotThrow();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenNeverInvoked_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -323,7 +323,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.AtMost(3));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) more than 3 times,

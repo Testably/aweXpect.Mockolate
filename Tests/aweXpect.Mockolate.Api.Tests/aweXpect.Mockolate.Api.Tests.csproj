@@ -9,8 +9,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Remove="xunit"/>
-		<PackageReference Include="xunit.v3"/>
 		<PackageReference Include="aweXpect.Snapshots.PublicApi"/>
 	</ItemGroup>
 

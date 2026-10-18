@@ -1,7 +1,6 @@
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -9,10 +8,10 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class AtLeastTests
 	{
-		[Theory]
-		[InlineData(3)]
-		[InlineData(6)]
-		[InlineData(18)]
+		[Test]
+		[Arguments(3)]
+		[Arguments(6)]
+		[Arguments(18)]
 		public async Task WhenInvokedAtLeastTheSameTimes_ShouldSucceed(int times)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -30,9 +29,9 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Theory]
-		[InlineData(4, 3)]
-		[InlineData(8, 6)]
+		[Test]
+		[Arguments(4, 3)]
+		[Arguments(8, 6)]
 		public async Task WhenInvokedFewerTimes_ShouldFail(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -47,7 +46,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeast(times);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at least {times} times,
@@ -60,7 +59,7 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedInBackground_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -89,7 +88,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeast(3);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least 3 times,
@@ -105,9 +104,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(3, 7)]
-		[InlineData(5, 5)]
+		[Test]
+		[Arguments(3, 7)]
+		[Arguments(5, 5)]
 		public async Task WhenInvokedInBackground_WithCancellation_ShouldSucceed(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -127,9 +126,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(3, 7)]
-		[InlineData(5, 5)]
+		[Test]
+		[Arguments(3, 7)]
+		[Arguments(5, 5)]
 		public async Task WhenInvokedInBackground_Within_ShouldSucceed(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -147,9 +146,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(3, 7)]
-		[InlineData(5, 5)]
+		[Test]
+		[Arguments(3, 7)]
+		[Arguments(5, 5)]
 		public async Task WhenInvokedInBackground_WithTimeout_ShouldSucceed(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -168,9 +167,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(3, 4)]
-		[InlineData(6, 8)]
+		[Test]
+		[Arguments(3, 4)]
+		[Arguments(6, 8)]
 		public async Task WhenInvokedMoreOften_ShouldSucceed(int times, int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -188,10 +187,10 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Theory]
-		[InlineData(0, false)]
-		[InlineData(3, true)]
-		[InlineData(8, true)]
+		[Test]
+		[Arguments(0, false)]
+		[Arguments(3, true)]
+		[Arguments(8, true)]
 		public async Task WhenInvokedNever_ShouldFailUnlessZero(int times, bool shouldThrow)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -201,7 +200,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeast(times);
 			}
 
-			await That(Act).Throws<XunitException>().OnlyIf(shouldThrow)
+			await That(Act).Throws<FailException>().OnlyIf(shouldThrow)
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) at least {times} times,
@@ -215,7 +214,7 @@ public sealed partial class ThatVerificationResultIs
 				              """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_Within_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -230,7 +229,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.IsAny<int>(), It.Is(true))).AtLeast(4).Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) at least 4 times within 0:00.050,
@@ -253,7 +252,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenTimesIsNegative_ShouldThrowArgumentOutOfRangeException()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -271,9 +270,9 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Theory]
-			[InlineData(3, 4)]
-			[InlineData(6, 8)]
+			[Test]
+			[Arguments(3, 4)]
+			[Arguments(6, 8)]
 			public async Task WhenInvokedAtLeastExpectedTimes_ShouldFail(int times, int invocationTimes)
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -289,7 +288,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.AtLeast(times));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage($"""
 					              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					              invoked method MyMethod(1, false) less than {times} times,
@@ -302,9 +301,9 @@ public sealed partial class ThatVerificationResultIs
 					              """).AsWildcard();
 			}
 
-			[Theory]
-			[InlineData(4, 3)]
-			[InlineData(8, 6)]
+			[Test]
+			[Arguments(4, 3)]
+			[Arguments(8, 6)]
 			public async Task WhenInvokedFewerTimes_ShouldSucceed(int times, int invocationTimes)
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -323,7 +322,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).DoesNotThrow();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenNeverInvoked_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();

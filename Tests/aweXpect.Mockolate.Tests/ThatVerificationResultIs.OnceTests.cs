@@ -3,7 +3,7 @@ using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
 using Mockolate.Verify;
-using Xunit.Sdk;
+using TUnit.Core.Exceptions;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -11,7 +11,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class OnceTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenInvokedInBackground_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -40,7 +40,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -56,8 +56,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(1)]
+		[Test]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_WithCancellation_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -77,8 +77,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(1)]
+		[Test]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_Within_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -96,8 +96,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(1)]
+		[Test]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_WithTimeout_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -115,7 +115,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreThanTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -129,7 +129,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -151,7 +151,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedNever_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -162,7 +162,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -176,7 +176,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedOnce_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -191,7 +191,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -205,7 +205,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -226,7 +226,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_Within_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -236,7 +236,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.IsAny<int>(), It.Is(true))).Once().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) exactly once within 0:00.050,
@@ -250,7 +250,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_WithinOnAwaitableSubject_ShouldKeepTimeoutOfSubject()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -261,7 +261,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject).Once().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>();
+			await That(Act).Throws<FailException>();
 
 			Task backgroundTask = Task.Delay(500).ContinueWith(_ => sut.MyMethod(1, false));
 
@@ -275,7 +275,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_WithinOnAwaitableSubjectWithShorterTimeout_ShouldFailAfterTimeoutOfSubject()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -287,12 +287,12 @@ public sealed partial class ThatVerificationResultIs
 					.Within(30.Seconds());
 			}
 
-			await That(Act).Throws<XunitException>();
+			await That(Act).Throws<FailException>();
 			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
 				.Because("the shorter timeout of the subject ends the wait");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenOtherMethodsAreInvoked_Within_ShouldShowMatchingAndAllInteractions()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -305,7 +305,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once within 0:00.050,
@@ -322,7 +322,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_WithTimeout_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -332,7 +332,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithTimeout(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -347,7 +347,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the timeout of the expectation is the time to wait for the interaction");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenTimeoutIsShorterThanWithin_ShouldFailWithTimeout()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -358,7 +358,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithTimeout(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once within 0:30,
@@ -373,7 +373,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the timeout of the expectation ends the wait before the Within timeout elapses");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenCanceled_ShouldBeInconclusive()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -385,7 +385,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Once().WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<InconclusiveException>()
+			await That(Act).Throws<InconclusiveTestException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -400,7 +400,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("a cancellation by the caller does not decide whether the interaction happened");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenCanceledWhileWaiting_ShouldBeInconclusive()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -413,7 +413,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<InconclusiveException>()
+			await That(Act).Throws<InconclusiveTestException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once within 0:30,
@@ -428,7 +428,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("a cancellation by the caller does not decide whether the interaction happened");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -442,7 +442,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<InconclusiveException>()
+			await That(Act).Throws<InconclusiveTestException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly once,
@@ -458,7 +458,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenWithinFollowsBecause_ShouldApplyWithin()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -471,7 +471,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenEvaluatedForSeveralItems_ShouldOnlyShowInteractionsOfFailingItem()
 		{
 			IMyService sut1 = IMyService.CreateMock();
@@ -487,7 +487,7 @@ public sealed partial class ThatVerificationResultIs
 					.All().ComplyWith(x => x.DoesNotComplyWith(y => y.Once()));
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             *
 				             Matching Interactions (item [1]):
@@ -503,7 +503,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the interactions of the first mock must not be shown for the second item");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenVerifiedOnMember_ShouldStartResultWithMemberName()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -514,7 +514,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject).Whose(s => s.Verification, it => it!.Once());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that subject
 				             whose Verification invoked method MyMethod(1, false) exactly once,
@@ -528,7 +528,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenSubjectIsNull_ShouldFail()
 		{
 			VerificationResult<IMyService>? subject = null;
@@ -538,7 +538,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject!).Once();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that subject
 				             has the interaction exactly once,
@@ -546,7 +546,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenSubjectIsNull_Negated_ShouldFail()
 		{
 			VerificationResult<IMyService>? subject = null;
@@ -556,7 +556,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject!).DoesNotComplyWith(it => it.Once());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that subject
 				             has the interaction not exactly once,

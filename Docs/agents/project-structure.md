@@ -23,7 +23,7 @@ The library depends on `aweXpect.Core` (not `aweXpect`) and `Mockolate`. Its roo
 - `ThatVerificationResult.cs` holds the shared count logic: `VerificationCountConstraint<TVerify>` evaluates a Mockolate `VerificationResult<TVerify>`, waits for an awaitable result or a `Within` timeout, and adds the "Matching Interactions" and "All Interactions" contexts to a failure. `HasExactlyConstraint`, `HasAtMostConstraint` and `HasAtLeastConstraint` derive from it.
 - `ThatVerificationResult.<Expectation>.cs` contains one public expectation each (`Once`, `Twice`, `Never`, `AtLeast*`, `AtMost*`, `Exactly`, `Between`, `Times`, `Then`). An expectation adds its constraint with `subject.Get().ExpectationBuilder.AddConstraint(...)`, passing the options as state to a static lambda, and returns an `AndOrWithinResult` when it supports `Within`. Constraints specific to one expectation are nested private classes in its file.
 - `ThatMockVerify.<Expectation>.cs` contains the expectations on `IMockVerify<TVerify>` (`AllInteractionsAreVerified`, `AllSetupsAreUsed`).
-- `Results/AndOrWithinResult.cs` and `Options/WithinOptions.cs` add `.Within(timeout)` to count expectations.
+- `Results/AndOrWithinResult.cs` and `Options/WithinOptions.cs` add `.Within(timeout)` to count expectations and `Then`.
 - `Web/ItExtensions.HttpContent.IsJsonContent.cs` adds `WithJson` and `WithJsonMatching` to `It.IsHttpContent()` with C# extension members in the `Mockolate.Web` namespace, only for `net8.0` and newer.
 - `Helpers/` contains `MyDescribableSubject<T>`, which names the mock in failure messages, and polyfills for `netstandard2.0`.
 - `Usings.cs` imports `aweXpect.Formatting` globally.

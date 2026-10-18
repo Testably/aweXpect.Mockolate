@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
+using aweXpect.Core.Internal;
+using aweXpect.Mockolate.Tests.TestHelpers;
 using Mockolate;
 using Mockolate.Verify;
 using TUnit.Core.Exceptions;
@@ -490,6 +492,257 @@ public sealed partial class ThatVerificationResultIs
 					               invoke method MyMethod(3)
 					             ]
 					             """);
+			}
+		}
+
+		public sealed class WithinTests
+		{
+			[Test]
+			public async Task WhenBudgetIsUsedUpByStepWithOwnTimeout_ShouldCheckNextStepOnce()
+			{
+				IMyService sut = IMyService.CreateMock();
+				VirtualTimeSystem timeSystem = new();
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+						.Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()), m => m.MyMethod(It.Is(3)))
+						.Within(30.Seconds())
+						.WithTimeSystem(timeSystem);
+				}
+
+				Task act = Act();
+				timeSystem.Advance(31.Seconds());
+				sut.MyMethod(2);
+
+				await That(() => act).Throws<FailException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2), then
+					             invoked method MyMethod(3) in order within 0:30,
+					             but it invoked method MyMethod(3) not at all
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1),
+					               invoke method MyMethod(2)
+					             ]
+					             """);
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the step with its own timeout used up the budget, so the next step is checked without waiting");
+			}
+
+			[Test]
+			public async Task WhenCanceledDuringBudget_ShouldBeInconclusive()
+			{
+				IMyService sut = IMyService.CreateMock();
+				using CancellationTokenSource cts = new();
+				cts.CancelAfter(50.Milliseconds());
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)))
+						.Within(30.Seconds())
+						.WithCancellation(cts.Token);
+				}
+
+				await That(Act).Throws<InconclusiveTestException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) in order within 0:30,
+					             but it could not be verified, because the evaluation was already canceled
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1)
+					             ]
+					             """);
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the cancellation ends the wait before the budget is used up");
+			}
+
+			[Test]
+			public async Task WhenCanceledDuringOwnTimeoutOfStep_ShouldBeInconclusive()
+			{
+				IMyService sut = IMyService.CreateMock();
+				using CancellationTokenSource cts = new();
+				cts.CancelAfter(50.Milliseconds());
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()))
+						.WithCancellation(cts.Token);
+				}
+
+				await That(Act).Throws<InconclusiveTestException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) in order,
+					             but it could not be verified, because the evaluation was already canceled
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1)
+					             ]
+					             """);
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the cancellation also ends the wait of a step with its own timeout");
+			}
+
+			[Test]
+			public async Task WhenNegatedAndInOrder_ShouldFail()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(1);
+				sut.MyMethod(2);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+						.DoesNotComplyWith(it => it.Then(m => m.MyMethod(It.Is(2))).Within(30.Seconds()));
+				}
+
+				await That(Act).Throws<FailException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) not in order within 0:30,
+					             but it did
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1),
+					               invoke method MyMethod(2)
+					             ]
+					             """);
+			}
+
+			[Test]
+			public async Task WhenOnlyStepHasTimeout_ShouldWaitForIt()
+			{
+				IMyService sut = IMyService.CreateMock();
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+				Task invocation = Task.Run(async () =>
+				{
+					await Task.Delay(50.Milliseconds());
+					sut.MyMethod(2);
+				});
+
+				await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()));
+
+				await invocation;
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the step is checked again when it is invoked while waiting for its own timeout");
+			}
+
+			[Test]
+			public async Task WhenStepDoesNotHappenWithinTimeout_ShouldFail()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)))
+						.Within(50.Milliseconds());
+				}
+
+				await That(Act).Throws<FailException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) in order within 0:00.050,
+					             but it invoked method MyMethod(2) not at all
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1)
+					             ]
+					             """);
+			}
+
+			[Test]
+			public async Task WhenStepHasLongerTimeoutOfItsOwn_ShouldWaitBeyondTheBudget()
+			{
+				IMyService sut = IMyService.CreateMock();
+
+				sut.MyMethod(1);
+				Task invocation = Task.Run(async () =>
+				{
+					await Task.Delay(200.Milliseconds());
+					sut.MyMethod(2);
+				});
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+						.Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()))
+						.Within(50.Milliseconds());
+				}
+
+				await That(Act).DoesNotThrow()
+					.Because("a step with its own timeout waits for it, regardless of the budget of the sequence");
+				await invocation;
+			}
+
+			[Test]
+			public async Task WhenStepsHappenWithinTimeout_ShouldSucceed()
+			{
+				IMyService sut = IMyService.CreateMock();
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+				Task invocation = Task.Run(async () =>
+				{
+					await Task.Delay(50.Milliseconds());
+					sut.MyMethod(2);
+					sut.MyMethod(3);
+				});
+
+				await That(sut.Mock.Verify.MyMethod(It.Is(1)))
+					.Then(m => m.MyMethod(It.Is(2)), m => m.MyMethod(It.Is(3)))
+					.Within(30.Seconds());
+
+				await invocation;
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("every step is checked again when an interaction is recorded while waiting");
+			}
+
+			[Test]
+			public async Task WhenStepsHappenWithinWithTimeout_ShouldSucceed()
+			{
+				IMyService sut = IMyService.CreateMock();
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+				Task invocation = Task.Run(async () =>
+				{
+					await Task.Delay(50.Milliseconds());
+					sut.MyMethod(2);
+				});
+
+				await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)))
+					.WithTimeout(30.Seconds());
+
+				await invocation;
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the timeout of the expectation is the budget, when there is no Within");
 			}
 		}
 	}

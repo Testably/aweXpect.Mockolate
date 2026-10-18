@@ -9,6 +9,7 @@ using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
 using aweXpect.Core.Extending;
 using aweXpect.Helpers;
+using aweXpect.Options;
 using aweXpect.Results;
 using Mockolate;
 using Mockolate.Exceptions;
@@ -22,9 +23,13 @@ public static partial class ThatVerificationResult
 	/// <summary>
 	///     Verifies that the <paramref name="interactions" /> happen after the current interaction in the given order.
 	/// </summary>
+	/// <remarks>
+	///     A timeout of <c>Within</c> is a budget for the whole sequence. An interaction with a timeout of its own waits
+	///     up to that timeout instead, while the others only wait for what is left of the budget.
+	/// </remarks>
 	/// <exception cref="ArgumentNullException">The <paramref name="interactions" /> are <see langword="null" />.</exception>
 	[GuaranteesNotNull]
-	public static AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
+	public static AndOrWithinResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
 		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
 	{
 		if (interactions is null)
@@ -33,112 +38,147 @@ public static partial class ThatVerificationResult
 				new ArgumentNullException(nameof(interactions), "The 'interactions' cannot be null."));
 		}
 
-		return new AndOrResult<VerificationResult<T>, IThat<VerificationResult<T>>>(
-			subject.Get().ExpectationBuilder.AddConstraint(interactions,
-				static (interactions, it, grammars) => new ThenConstraint<T>(it, grammars, interactions)),
-			subject);
+		WithinOptions options = new();
+		return new AndOrWithinResult<VerificationResult<T>, IThat<VerificationResult<T>>>(
+			subject.Get().ExpectationBuilder.AddConstraint((Interactions: interactions, Options: options),
+				static (s, expectationBuilder, it, grammars)
+					=> new ThenConstraint<T>(expectationBuilder, it, grammars, s.Interactions, s.Options)),
+			subject,
+			options);
 	}
 
+	/// <remarks>
+	///     Interactions are only appended, so an interaction found for a step keeps its place before the interactions
+	///     that are recorded later, and every step is checked on the newest snapshot.
+	/// </remarks>
 	private sealed class ThenConstraint<T>(
+		ExpectationBuilder expectationBuilder,
 		string it,
 		ExpectationGrammars grammars,
-		Func<T, VerificationResult<T>>[] interactions)
+		Func<T, VerificationResult<T>>[] interactions,
+		WithinOptions options)
 		: ConstraintResult.WithNotNullValue<VerificationResult<T>>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<T>>
 	{
 		private readonly List<string> _expectations = new();
-		private string? _error;
+		private readonly Dictionary<IInteraction, int> _positions = new();
 		private IInteraction[]? _allInteractions;
+		private string? _error;
+		private IInteraction? _previous;
+		private IInteraction[]? _snapshot;
+		private IVerificationResult? _step;
 
 		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<T>? actual,
 			IEvaluationContext context, CancellationToken cancellationToken)
 		{
 			Actual = actual;
 			_expectations.Clear();
-			_error = null;
+			_positions.Clear();
 			_allInteractions = null;
+			_snapshot = null;
+			_error = null;
+			_previous = null;
 			if (actual is null)
 			{
 				return this;
 			}
 
 			T verify = ((IVerificationResult<T>)actual).Object;
-			IVerificationResult verificationResult = actual;
-			IInteraction[] snapshot = [];
-			Dictionary<IInteraction, int> positions = new();
-			int after = -1;
-			_expectations.Add(verificationResult.Expectation);
-			(bool result, bool isUndecided) = await VerifyFirst(verificationResult, VerifyFirstInteractions,
-				context, cancellationToken);
-
-			foreach (Func<T, VerificationResult<T>> check in interactions)
+			TimeSpan? timeout = options.Timeout ?? expectationBuilder.Timeout;
+			using CancellationTokenSource? budgetCts =
+				timeout is not null || expectationBuilder.CancellationToken is not null
+					? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+					: null;
+			budgetCts?.CancelAfter(timeout ?? Timeout.InfiniteTimeSpan);
+			long startTimestamp = context.GetTimestamp();
+			Func<IInteraction[], bool> check = Check;
+			VerificationResult<T> step = actual;
+			Outcome outcome = Outcome.Success;
+			int index = 0;
+			while (true)
 			{
-				IVerificationResult currentVerificationResult = UserCode.Invoke(check, verify, "the interaction selector");
-				_expectations.Add(currentVerificationResult.Expectation);
-				result = currentVerificationResult.Verify(i => VerifyInteractions(i, currentVerificationResult)) &&
-				         result;
+				_expectations.Add(((IVerificationResult)step).Expectation);
+				if (outcome == Outcome.Success)
+				{
+					outcome = await VerifyStep(step, check, budgetCts, timeout, startTimestamp, context,
+						cancellationToken);
+				}
+
+				if (index == interactions.Length)
+				{
+					break;
+				}
+
+				step = UserCode.Invoke(interactions[index++], verify, "the interaction selector");
 			}
 
-			if (isUndecided)
-			{
-				Outcome = Outcome.Undecided;
-			}
-			else
-			{
-				Outcome = result ? Outcome.Success : Outcome.Failure;
-			}
-
-			_allInteractions = snapshot;
+			Outcome = outcome;
+			_allInteractions = _snapshot;
 			return this;
-
-			bool VerifyFirstInteractions(IInteraction[] filteredInteractions)
-			{
-				snapshot = verificationResult.Interactions.ToArray();
-				positions = new Dictionary<IInteraction, int>(snapshot.Length);
-				for (int i = 0; i < snapshot.Length; i++)
-				{
-					positions[snapshot[i]] = i;
-				}
-
-				after = -1;
-				_error = null;
-				return VerifyInteractions(filteredInteractions, verificationResult);
-			}
-
-			bool VerifyInteractions(IInteraction[] filteredInteractions, IVerificationResult currentVerificationResult)
-			{
-				after = FirstPositionAfter(filteredInteractions, positions, after);
-				if (after == int.MaxValue)
-				{
-					_error ??= filteredInteractions.Length > 0
-						? $"{currentVerificationResult.Expectation} too early"
-						: $"{currentVerificationResult.Expectation} not at all";
-					return false;
-				}
-
-				return true;
-			}
 		}
 
-		private static async ValueTask<(bool Result, bool IsUndecided)> VerifyFirst(
-			IVerificationResult verificationResult, Func<IInteraction[], bool> predicate,
-			IEvaluationContext context, CancellationToken cancellationToken)
+		/// <remarks>
+		///     Only a step without a timeout of its own gets the rest of the <paramref name="budgetCts" />. Without any
+		///     rest it is checked once, without waiting.
+		/// </remarks>
+		private async ValueTask<Outcome> VerifyStep(VerificationResult<T> step, Func<IInteraction[], bool> check,
+			CancellationTokenSource? budgetCts, TimeSpan? timeout, long startTimestamp, IEvaluationContext context,
+			CancellationToken cancellationToken)
 		{
-			if (verificationResult is not IAsyncVerificationResult asyncVerificationResult)
+			_step = step;
+			if (budgetCts is not null && step is not IAsyncVerificationResult &&
+			    (timeout is null || timeout == Timeout.InfiniteTimeSpan ||
+			     context.GetElapsedTime(startTimestamp) < timeout))
 			{
-				return (verificationResult.Verify(predicate), false);
+				step = step.WithCancellation(budgetCts.Token);
+			}
+
+			if (step is not IAsyncVerificationResult asyncStep)
+			{
+				return ((IVerificationResult)step).Verify(check) ? Outcome.Success : Outcome.Failure;
 			}
 
 			try
 			{
-				return (await asyncVerificationResult.VerifyAsync(predicate, cancellationToken), false);
+				return await asyncStep.VerifyAsync(check, cancellationToken) ? Outcome.Success : Outcome.Failure;
 			}
 			catch (Exception exception) when (exception is MockVerificationTimeoutException
 				                                  or OperationCanceledException)
 			{
-				return (false,
-					context.Cancellation.Reason is CancellationReason.Caller or CancellationReason.Timeout);
+				return IsInconclusive(context.Cancellation, timeout, context.GetElapsedTime(startTimestamp))
+					? Outcome.Undecided
+					: Outcome.Failure;
 			}
+		}
+
+		private bool Check(IInteraction[] matchingInteractions)
+		{
+			IMockInteractions allInteractions = ((IVerificationResult)Actual!).Interactions;
+			if (_snapshot is null || allInteractions.Count != _snapshot.Length)
+			{
+				_snapshot = allInteractions.ToArray();
+				_positions.Clear();
+				for (int i = 0; i < _snapshot.Length; i++)
+				{
+					_positions[_snapshot[i]] = i;
+				}
+			}
+
+			int after = _previous is not null && _positions.TryGetValue(_previous, out int previousPosition)
+				? previousPosition
+				: -1;
+			int position = FirstPositionAfter(matchingInteractions, _positions, after);
+			if (position == int.MaxValue)
+			{
+				_error = matchingInteractions.Length > 0
+					? $"{_step!.Expectation} too early"
+					: $"{_step!.Expectation} not at all";
+				return false;
+			}
+
+			_error = null;
+			_previous = _snapshot[position];
+			return true;
 		}
 
 		/// <summary>
@@ -163,13 +203,13 @@ public static partial class ThatVerificationResult
 		}
 
 		protected override void AppendNormalExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> AppendExpectations(stringBuilder, indentation).Append(" in order");
+			=> AppendExpectations(stringBuilder, indentation).Append(" in order").Append(options);
 
 		protected override void AppendNormalResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(' ').Append(_error);
 
 		protected override void AppendNegatedExpectation(StringBuilder stringBuilder, string? indentation = null)
-			=> AppendExpectations(stringBuilder, indentation).Append(" not in order");
+			=> AppendExpectations(stringBuilder, indentation).Append(" not in order").Append(options);
 
 		protected override void AppendNegatedResult(StringBuilder stringBuilder, string? indentation = null)
 			=> stringBuilder.Append(It).Append(" did");

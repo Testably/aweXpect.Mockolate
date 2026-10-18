@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -10,7 +9,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class AtLeastOnceTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenInvokedInBackground_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -39,7 +38,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeastOnce();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once,
@@ -55,9 +54,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(7)]
-		[InlineData(1)]
+		[Test]
+		[Arguments(7)]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_WithCancellation_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -77,9 +76,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(7)]
-		[InlineData(1)]
+		[Test]
+		[Arguments(7)]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_Within_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -97,9 +96,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(7)]
-		[InlineData(1)]
+		[Test]
+		[Arguments(7)]
+		[Arguments(1)]
 		public async Task WhenInvokedInBackground_WithTimeout_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -118,7 +117,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreThanTwice_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -135,7 +134,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedNever_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -145,7 +144,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeastOnce();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once,
@@ -159,7 +158,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedOnce_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -174,7 +173,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedTwice_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -190,7 +189,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_Within_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -203,7 +202,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).AtLeastOnce().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) at least once within 0:00.050,
@@ -222,7 +221,7 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Fact]
+			[Test]
 			public async Task WhenInvokedInBackground_Within_ShouldFailWhenInvoked()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -235,7 +234,7 @@ public sealed partial class ThatVerificationResultIs
 				}
 
 				Stopwatch stopwatch = Stopwatch.StartNew();
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) less than once within 0:30,
@@ -258,7 +257,7 @@ public sealed partial class ThatVerificationResultIs
 				await backgroundTask;
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenNotInvoked_Within_ShouldSucceedAfterWaiting()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -275,7 +274,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("the inner verification waits the whole time for an interaction that does not happen");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInvokedNever_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -289,7 +288,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).DoesNotThrow();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInvokedOnce_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -302,7 +301,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.AtLeastOnce());
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) less than once,
@@ -320,7 +319,7 @@ public sealed partial class ThatVerificationResultIs
 					             """);
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInvokedTwice_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -334,7 +333,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.AtLeastOnce());
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) less than once,

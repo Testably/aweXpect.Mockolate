@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -10,13 +9,13 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class TimesTests
 	{
-		[Theory]
-		[InlineData(0, true)]
-		[InlineData(1, false)]
-		[InlineData(2, true)]
-		[InlineData(3, false)]
-		[InlineData(4, true)]
-		[InlineData(5, false)]
+		[Test]
+		[Arguments(0, true)]
+		[Arguments(1, false)]
+		[Arguments(2, true)]
+		[Arguments(3, false)]
+		[Arguments(4, true)]
+		[Arguments(5, false)]
 		public async Task Times_WithEvenPredicate_ShouldReturnExpectedResult(int count, bool expectSuccess)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -38,7 +37,7 @@ public sealed partial class ThatVerificationResultIs
 				_ => $"it was found {count} times",
 			};
 
-			await That(Act).Throws<XunitException>().OnlyIf(!expectSuccess)
+			await That(Act).Throws<FailException>().OnlyIf(!expectSuccess)
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) according to the predicate n => n % 2 == 0,
@@ -49,13 +48,13 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
-		[Theory]
-		[InlineData(0, false)]
-		[InlineData(1, true)]
-		[InlineData(2, false)]
-		[InlineData(3, true)]
-		[InlineData(4, false)]
-		[InlineData(5, true)]
+		[Test]
+		[Arguments(0, false)]
+		[Arguments(1, true)]
+		[Arguments(2, false)]
+		[Arguments(3, true)]
+		[Arguments(4, false)]
+		[Arguments(5, true)]
 		public async Task Times_WithOddPredicate_ShouldReturnExpectedResult(int count, bool expectSuccess)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -77,7 +76,7 @@ public sealed partial class ThatVerificationResultIs
 				_ => $"it was found {count} times",
 			};
 
-			await That(Act).Throws<XunitException>().OnlyIf(!expectSuccess)
+			await That(Act).Throws<FailException>().OnlyIf(!expectSuccess)
 				.WithMessage($"""
 				              Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				              invoked method MyMethod(1, false) according to the predicate n => n % 2 == 1,
@@ -88,7 +87,7 @@ public sealed partial class ThatVerificationResultIs
 				              """).AsWildcard();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedInBackground_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -117,7 +116,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(n => n % 3 == 2);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate n => n % 3 == 2,
@@ -133,9 +132,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(8)]
-		[InlineData(3)]
+		[Test]
+		[Arguments(8)]
+		[Arguments(3)]
 		public async Task WhenInvokedInBackground_WithCancellation_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -158,9 +157,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(8)]
-		[InlineData(3)]
+		[Test]
+		[Arguments(8)]
+		[Arguments(3)]
 		public async Task WhenInvokedInBackground_Within_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -181,9 +180,9 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(8)]
-		[InlineData(3)]
+		[Test]
+		[Arguments(8)]
+		[Arguments(3)]
 		public async Task WhenInvokedInBackground_WithTimeout_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -204,7 +203,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_Within_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -221,7 +220,7 @@ public sealed partial class ThatVerificationResultIs
 					.Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(It.IsAny<int>(), true) according to the predicate x => x != 4 within 0:00.050,
@@ -246,7 +245,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenPredicateThrows_ShouldFail()
 		{
 			InvalidOperationException exception = new("predicate failed");
@@ -259,7 +258,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Times(_ => throw exception);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate _ => throw exception,
@@ -280,7 +279,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the predicate answered nothing, so the expectation fails with its exception");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenPredicateStillThrowsAtTheEnd_Within_ShouldFail()
 		{
 			InvalidOperationException exception = new("predicate failed");
@@ -292,7 +291,7 @@ public sealed partial class ThatVerificationResultIs
 					.Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate _ => throw exception within 0:00.050,
@@ -309,7 +308,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the last check still threw, so the expectation fails with its exception");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenPredicateStillThrowsAtTheEnd_WithTimeout_ShouldFail()
 		{
 			InvalidOperationException exception = new("predicate failed");
@@ -321,7 +320,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithTimeout(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) according to the predicate _ => throw exception,
@@ -338,7 +337,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the timeout also makes the verification wait, and the last check still threw");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenPredicateThrowsFirstAndIsSatisfiedLater_Within_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -369,7 +368,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenPredicateIsNull_ShouldThrowArgumentNullException()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -387,7 +386,7 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Fact]
+			[Test]
 			public async Task WhenPredicateDoesNotMatch_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -403,7 +402,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).DoesNotThrow();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenPredicateMatches_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -417,7 +416,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.Times(n => n == 2));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) not according to the predicate n => n == 2,
@@ -437,7 +436,7 @@ public sealed partial class ThatVerificationResultIs
 					             """);
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenPredicateThrows_ShouldFail()
 			{
 				InvalidOperationException exception = new("predicate failed");
@@ -451,7 +450,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.Times(_ => throw exception));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1, false) not according to the predicate _ => throw exception,

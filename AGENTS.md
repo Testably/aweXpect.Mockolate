@@ -24,8 +24,8 @@ Correctness is a must. The other goals are strong defaults and win in this order
 
 ## Validation
 
-- Run the affected tests in `Tests/aweXpect.Mockolate.Tests` for every target framework you can, at least `net10.0` and `net48` on Windows.
-- A public API change fails `Tests/aweXpect.Mockolate.Api.Tests`. Accept intended changes by running it with `AWEXPECT_ACCEPT_SNAPSHOTS=all` (or the explicit `AcceptApiChanges` test) and commit the updated `*.awexpect-snapshot.txt` files for all three target frameworks.
+- Run the affected tests in `Tests/aweXpect.Mockolate.Tests` for every target framework you can, at least `net10.0` and `net48` on Windows. The tests use TUnit on the Microsoft.Testing.Platform: `dotnet test` runs all test projects, `--treenode-filter` selects tests (see [workflows](Docs/agents/workflows.md#tests)).
+- A public API change fails `Tests/aweXpect.Mockolate.Api.Tests`. Accept intended changes by running it with `AWEXPECT_ACCEPT_SNAPSHOTS=all` (or the explicit `AcceptApiChanges` test, which only runs when a filter selects it) and commit the updated `*.awexpect-snapshot.txt` files for all three target frameworks.
 - Behaviour that could differ when trimmed belongs in `Tests/aweXpect.Mockolate.Aot` and is verified with `./build.ps1 AotSmokeTests --configuration Release`.
 - Pin failure messages exactly with `.WithMessage(...)` instead of asserting only the exception type.
 - Files are checked out with CRLF (`.editorconfig`, `* text=auto`), and tests hold multi-line failure messages in raw string literals. Edit with tools that keep the line endings instead of `sed -i`, which can leave mixed endings.

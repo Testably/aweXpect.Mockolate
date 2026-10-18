@@ -1,7 +1,6 @@
 using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -9,7 +8,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class TwiceTests
 	{
-		[Fact]
+		[Test]
 		public async Task WhenInvokedInBackground_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -38,7 +37,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Twice();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
@@ -54,8 +53,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(2)]
+		[Test]
+		[Arguments(2)]
 		public async Task WhenInvokedInBackground_WithCancellation_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -75,8 +74,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(2)]
+		[Test]
+		[Arguments(2)]
 		public async Task WhenInvokedInBackground_Within_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -94,8 +93,8 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Theory]
-		[InlineData(2)]
+		[Test]
+		[Arguments(2)]
 		public async Task WhenInvokedInBackground_WithTimeout_ShouldSucceed(int invocationTimes)
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -113,7 +112,7 @@ public sealed partial class ThatVerificationResultIs
 			await backgroundTask;
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedMoreThanTwice_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -128,7 +127,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Twice();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
@@ -151,7 +150,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedNever_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -162,7 +161,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Twice();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
@@ -176,7 +175,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedOnce_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -188,7 +187,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(1), It.Is(false))).Twice();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1, false) exactly twice,
@@ -206,7 +205,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenInvokedTwice_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -222,7 +221,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenNotInvoked_Within_ShouldFailWithDescriptiveMessage()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -237,7 +236,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(sut.Mock.Verify.MyMethod(It.Is(3), It.Is(true))).Twice().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(3, true) exactly twice within 0:00.050,

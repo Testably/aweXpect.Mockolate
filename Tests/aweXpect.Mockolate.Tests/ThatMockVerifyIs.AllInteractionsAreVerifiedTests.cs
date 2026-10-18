@@ -1,6 +1,5 @@
 using Mockolate;
 using Mockolate.Verify;
-using Xunit.Sdk;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -8,7 +7,7 @@ public sealed partial class ThatMockVerifyIs
 {
 	public sealed class AllInteractionsAreVerifiedTests
 	{
-		[Fact]
+		[Test]
 		public async Task Negated_WhenAllAreVerified_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -23,7 +22,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).DoesNotComplyWith(it => it.AllInteractionsAreVerified());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             does not have all interactions verified,
@@ -31,7 +30,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task Negated_WhenSubjectIsNull_ShouldThrow()
 		{
 			IMockVerify<IMyService>? subject = null;
@@ -41,7 +40,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(subject!).DoesNotComplyWith(it => it.AllInteractionsAreVerified());
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the ThatMockVerifyIs.IMyService mock
 				             does not have all interactions verified,
@@ -50,7 +49,7 @@ public sealed partial class ThatMockVerifyIs
 				.Because("a null subject cannot be verified, so the negation fails as well");
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenSubjectIsNull_ShouldThrow()
 		{
 			IMockVerify<IMyService>? subject = null;
@@ -60,7 +59,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(subject!).AllInteractionsAreVerified();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the ThatMockVerifyIs.IMyService mock
 				             has all interactions verified,
@@ -68,7 +67,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenAllInvocationsWereVerified_ShouldNotThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -86,7 +85,7 @@ public sealed partial class ThatMockVerifyIs
 			await That(Act).DoesNotThrow();
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenMultipleInvocationIsNotVerified_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -102,7 +101,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).AllInteractionsAreVerified();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has all interactions verified,
@@ -116,7 +115,7 @@ public sealed partial class ThatMockVerifyIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task WhenOneInvocationIsNotVerified_ShouldThrow()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -131,7 +130,7 @@ public sealed partial class ThatMockVerifyIs
 				await That(sut.Mock.Verify).AllInteractionsAreVerified();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatMockVerifyIs.IMyService mock
 				             has all interactions verified,

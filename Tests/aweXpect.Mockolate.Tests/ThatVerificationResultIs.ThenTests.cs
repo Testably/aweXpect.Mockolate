@@ -3,7 +3,7 @@ using System.Threading;
 using aweXpect.Chronology;
 using Mockolate;
 using Mockolate.Verify;
-using Xunit.Sdk;
+using TUnit.Core.Exceptions;
 
 namespace aweXpect.Mockolate.Tests;
 
@@ -11,7 +11,7 @@ public sealed partial class ThatVerificationResultIs
 {
 	public sealed class ThenTests
 	{
-		[Fact]
+		[Test]
 		public async Task Then_ShouldVerifyInOrder()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -24,7 +24,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(sut.Mock.Verify.MyMethod(It.Is(3))).Then(m => m.MyMethod(It.Is(4)));
 			await That(async Task ()
 					=> await That(sut.Mock.Verify.MyMethod(It.Is(2))).Then(m => m.MyMethod(It.Is(1))))
-				.Throws<XunitException>()
+				.Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(2), then
@@ -43,7 +43,7 @@ public sealed partial class ThatVerificationResultIs
 				.Then(m => m.MyMethod(It.Is(2)), m => m.MyMethod(It.Is(3)));
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -59,7 +59,7 @@ public sealed partial class ThatVerificationResultIs
 					.WithCancellation(cts.Token);
 			}
 
-			await That(Act).Throws<InconclusiveException>()
+			await That(Act).Throws<InconclusiveTestException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
@@ -75,7 +75,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenFirstFilterMatchesMultipleInteractions_ShouldUseEarliestIndex()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -87,7 +87,7 @@ public sealed partial class ThatVerificationResultIs
 			await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)));
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenInitialAndThenFiltersMatchSameSingleInteraction_ShouldFail()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -96,10 +96,10 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.Is(1))))
-				.Throws<XunitException>();
+				.Throws<FailException>();
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenInteractionSelectorThrows_ShouldFail()
 		{
 			InvalidOperationException exception = new("selector failed");
@@ -114,7 +114,7 @@ public sealed partial class ThatVerificationResultIs
 					.Then(m => m.MyMethod(It.Is(2)), _ => throw exception);
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
@@ -126,7 +126,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the selector answered nothing, so the expectation fails with its exception");
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenInvokedWhileWaitingForAwaitableSubject_ShouldSucceed()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -145,7 +145,7 @@ public sealed partial class ThatVerificationResultIs
 				.Because("the verification is repeated when the subject is invoked while waiting");
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenNoMatch_ShouldReturnFalse()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -157,7 +157,7 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task ()
 					=> await That(sut.Mock.Verify.MyMethod(It.Is(6))).Then(m => m.MyMethod(It.Is(4))))
-				.Throws<XunitException>()
+				.Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(6), then
@@ -175,7 +175,7 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.Is(6)), m => m.MyMethod(It.Is(3))))
-				.Throws<XunitException>()
+				.Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
@@ -194,7 +194,7 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.Is(2)), m => m.MyMethod(It.Is(6))))
-				.Throws<XunitException>()
+				.Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
@@ -212,7 +212,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenNotInvoked_AwaitableSubject_ShouldFailAfterTimeoutOfSubject()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -225,7 +225,7 @@ public sealed partial class ThatVerificationResultIs
 					.Then(m => m.MyMethod(It.Is(2)));
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 				             invoked method MyMethod(1), then
@@ -239,7 +239,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenSecondFilterMatchesAtAndAfterEarliest_ShouldAdvanceStrictly()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -250,10 +250,10 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.IsAny<int>()), m => m.MyMethod(It.Is(3))))
-				.Throws<XunitException>();
+				.Throws<FailException>();
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenSubjectIsNull_ShouldFail()
 		{
 			VerificationResult<IMyService>? subject = null;
@@ -263,7 +263,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject!).Then();
 			}
 
-			await That(Act).Throws<XunitException>()
+			await That(Act).Throws<FailException>()
 				.WithMessage("""
 				             Expected that subject
 				             has the interactions in order,
@@ -271,7 +271,7 @@ public sealed partial class ThatVerificationResultIs
 				             """);
 		}
 
-		[Fact]
+		[Test]
 		public async Task Then_WhenInteractionsAreNull_ShouldThrowArgumentNullException()
 		{
 			IMyService sut = IMyService.CreateMock();
@@ -289,7 +289,7 @@ public sealed partial class ThatVerificationResultIs
 
 		public sealed class NegatedTests
 		{
-			[Fact]
+			[Test]
 			public async Task WhenCanceledWhileWaitingForAwaitableSubject_ShouldBeInconclusive()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -306,7 +306,7 @@ public sealed partial class ThatVerificationResultIs
 						.WithCancellation(cts.Token);
 				}
 
-				await That(Act).Throws<InconclusiveException>()
+				await That(Act).Throws<InconclusiveTestException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1), then
@@ -322,7 +322,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("the cancellation ends the wait of the subject before its own timeout elapses");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenEvaluatedForSeveralItems_ShouldNotShowInteractionsOfPreviousItem()
 			{
 				IMyService sut1 = IMyService.CreateMock();
@@ -338,7 +338,7 @@ public sealed partial class ThatVerificationResultIs
 						.All().ComplyWith(x => x.DoesNotComplyWith(y => y.Then(m => m.MyMethod(It.Is(2)))));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             *
 					             All Interactions (item [1]):
@@ -350,7 +350,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("only the second item fails, so only its interactions are shown");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenSubjectIsNull_ShouldFail()
 			{
 				VerificationResult<IMyService>? subject = null;
@@ -360,7 +360,7 @@ public sealed partial class ThatVerificationResultIs
 					await That(subject!).DoesNotComplyWith(it => it.Then());
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that subject
 					             has the interactions not in order,
@@ -369,7 +369,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("a null subject cannot be verified, so the negation fails as well");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInteractionsAreInOrder_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -383,7 +383,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.Then(m => m.MyMethod(It.Is(2))));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1), then
@@ -398,7 +398,7 @@ public sealed partial class ThatVerificationResultIs
 					             """);
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInteractionsAreNotInOrder_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -415,7 +415,7 @@ public sealed partial class ThatVerificationResultIs
 				await That(Act).DoesNotThrow();
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenInteractionSelectorThrows_ShouldFail()
 			{
 				InvalidOperationException exception = new("selector failed");
@@ -430,7 +430,7 @@ public sealed partial class ThatVerificationResultIs
 						.DoesNotComplyWith(it => it.Then(_ => throw exception));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1) not in order,
@@ -441,7 +441,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("a selector that answered nothing must not be inverted into a success");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WhenNotInvoked_AwaitableSubject_ShouldSucceed()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -458,7 +458,7 @@ public sealed partial class ThatVerificationResultIs
 					.Because("the timeout of the subject fails the verification, which satisfies the negation");
 			}
 
-			[Fact]
+			[Test]
 			public async Task WithMultipleInteractionsInOrder_ShouldFail()
 			{
 				IMyService sut = IMyService.CreateMock();
@@ -475,7 +475,7 @@ public sealed partial class ThatVerificationResultIs
 							m => m.MyMethod(It.Is(3))));
 				}
 
-				await That(Act).Throws<XunitException>()
+				await That(Act).Throws<FailException>()
 					.WithMessage("""
 					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
 					             invoked method MyMethod(1), then

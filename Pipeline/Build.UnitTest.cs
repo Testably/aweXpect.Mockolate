@@ -28,12 +28,11 @@ partial class Build
 				EnvironmentInfo.IsWin
 					? []
 					: ["net48",];
-			DotNetTest(s => s
+			// Each run is started with `dotnet run`, so that its TRX and coverage file get a name of their own.
+			DotNetRun(s => s
 					.SetConfiguration(Configuration)
 					.SetProcessEnvironmentVariable("DOTNET_CLI_UI_LANGUAGE", "en-US")
 					.EnableNoBuild()
-					.SetDataCollector("XPlat Code Coverage")
-					.SetResultsDirectory(TestResultsDirectory)
 					.CombineWith(
 						UnitTestProjects,
 						(settings, project) => settings
@@ -42,7 +41,15 @@ partial class Build
 								project.GetTargetFrameworks()?.Except(excludedFrameworks),
 								(frameworkSettings, framework) => frameworkSettings
 									.SetFramework(framework)
-									.AddLoggers($"trx;LogFileName={project.Name}_{framework}.trx")
+									.SetProcessAdditionalArguments(
+										"--",
+										"--disable-logo",
+										$"--results-directory \"{TestResultsDirectory}\"",
+										"--report-trx",
+										$"--report-trx-filename {project.Name}_{framework}.trx",
+										"--coverage",
+										"--coverage-output-format cobertura",
+										$"--coverage-output {project.Name}_{framework}.cobertura.xml")
 							)
 					), completeOnFailure: true
 			);

@@ -316,6 +316,122 @@ public sealed partial class ItExtensionsTests
 					.IsEqualTo(allowTrailingCommas ? HttpStatusCode.OK : HttpStatusCode.NotImplemented);
 			}
 
+			public sealed class AdditionalMembersTests
+			{
+				public enum Body
+				{
+					Exact,
+					AdditionalProperty,
+					AdditionalNestedProperty,
+					AdditionalArrayElement,
+					AdditionalPropertyAndArrayElement,
+					MissingProperty,
+					MissingArrayElement,
+					DifferentValue,
+				}
+
+				[Test]
+				[MatrixDataSource]
+				public async Task WithJson_ShouldApplyOptions(
+					[Matrix(null, true, false)] bool? ignoreAdditionalProperties,
+					[Matrix(null, true, false)] bool? ignoreAdditionalArrayElements,
+					Body body)
+				{
+					AweXpectItExtensions.IJsonContentBodyParameter parameter = It.IsHttpContent()
+						.WithJson("""{"foo": 1, "items": [{"bar": 2}, {"bar": 3}]}""");
+
+					HttpStatusCode result = await PostAsync(parameter,
+						ignoreAdditionalProperties, ignoreAdditionalArrayElements, body);
+
+					await That(result).IsEqualTo(ExpectedStatusCode(body,
+							ignoreAdditionalProperties ?? false, ignoreAdditionalArrayElements ?? false))
+						.Because("WithJson does not match additional properties or array elements by default");
+				}
+
+				[Test]
+				[MatrixDataSource]
+				public async Task WithJsonMatching_ShouldApplyOptions(
+					[Matrix(null, true, false)] bool? ignoreAdditionalProperties,
+					[Matrix(null, true, false)] bool? ignoreAdditionalArrayElements,
+					Body body)
+				{
+					AweXpectItExtensions.IJsonContentBodyParameter parameter = It.IsHttpContent().WithJsonMatching(new
+					{
+						foo = 1,
+						items = new[]
+						{
+							new
+							{
+								bar = 2,
+							},
+							new
+							{
+								bar = 3,
+							},
+						},
+					});
+
+					HttpStatusCode result = await PostAsync(parameter,
+						ignoreAdditionalProperties, ignoreAdditionalArrayElements, body);
+
+					await That(result).IsEqualTo(ExpectedStatusCode(body,
+							ignoreAdditionalProperties ?? true, ignoreAdditionalArrayElements ?? true))
+						.Because("WithJsonMatching ignores additional properties and array elements by default");
+				}
+
+				private static HttpStatusCode ExpectedStatusCode(Body body,
+					bool ignoreAdditionalProperties, bool ignoreAdditionalArrayElements)
+				{
+					bool isMatch = body switch
+					{
+						Body.Exact => true,
+						Body.AdditionalProperty => ignoreAdditionalProperties,
+						Body.AdditionalNestedProperty => ignoreAdditionalProperties,
+						Body.AdditionalArrayElement => ignoreAdditionalArrayElements,
+						Body.AdditionalPropertyAndArrayElement => ignoreAdditionalProperties &&
+						                                          ignoreAdditionalArrayElements,
+						_ => false,
+					};
+					return isMatch ? HttpStatusCode.OK : HttpStatusCode.NotImplemented;
+				}
+
+				private static async Task<HttpStatusCode> PostAsync(AweXpectItExtensions.IJsonContentBodyParameter parameter,
+					bool? ignoreAdditionalProperties, bool? ignoreAdditionalArrayElements, Body body)
+				{
+					if (ignoreAdditionalProperties.HasValue)
+					{
+						parameter.IgnoringAdditionalProperties(ignoreAdditionalProperties.Value);
+					}
+
+					if (ignoreAdditionalArrayElements.HasValue)
+					{
+						parameter.IgnoringAdditionalArrayElements(ignoreAdditionalArrayElements.Value);
+					}
+
+					string content = body switch
+					{
+						Body.Exact => """{"items": [{"bar": 2}, {"bar": 3}], "foo": 1}""",
+						Body.AdditionalProperty => """{"foo": 1, "baz": 4, "items": [{"bar": 2}, {"bar": 3}]}""",
+						Body.AdditionalNestedProperty => """{"foo": 1, "items": [{"bar": 2}, {"bar": 3, "baz": 4}]}""",
+						Body.AdditionalArrayElement => """{"foo": 1, "items": [{"bar": 2}, {"bar": 3}, {"bar": 4}]}""",
+						Body.AdditionalPropertyAndArrayElement =>
+							"""{"foo": 1, "baz": 4, "items": [{"bar": 2}, {"bar": 3}, {"bar": 4}]}""",
+						Body.MissingProperty => """{"items": [{"bar": 2}, {"bar": 3}]}""",
+						Body.MissingArrayElement => """{"foo": 1, "items": [{"bar": 2}]}""",
+						_ => """{"foo": 1, "items": [{"bar": 2}, {"bar": 4}]}""",
+					};
+					HttpClient httpClient = HttpClient.CreateMock();
+					httpClient.Mock.Setup
+						.PostAsync(It.IsAny<Uri>(), parameter)
+						.ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
+
+					HttpResponseMessage result = await httpClient.PostAsync("https://www.aweXpect.com",
+						new StringContent(content),
+						CancellationToken.None);
+					return result.StatusCode;
+				}
+			}
+
 			public sealed class ArrayTests
 			{
 				[Test]
@@ -410,13 +526,13 @@ public sealed partial class ItExtensionsTests
 				}
 
 				[Test]
-				public async Task WhenSubjectContainsAdditionalElements_WhenNotIgnoringAdditionalProperties_ShouldFail()
+				public async Task WhenSubjectContainsAdditionalElements_WhenNotIgnoringAdditionalArrayElements_ShouldFail()
 				{
 					string body = "[1, 2, 3]";
 					HttpClient httpClient = HttpClient.CreateMock();
 					httpClient.Mock.Setup
 						.PostAsync(It.IsAny<Uri>(),
-							It.IsHttpContent().WithJsonMatching([1, 2,]).IgnoringAdditionalProperties(false))
+							It.IsHttpContent().WithJsonMatching([1, 2,]).IgnoringAdditionalArrayElements(false))
 						.ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
 
 					HttpResponseMessage result = await httpClient.PostAsync("https://www.aweXpect.com",

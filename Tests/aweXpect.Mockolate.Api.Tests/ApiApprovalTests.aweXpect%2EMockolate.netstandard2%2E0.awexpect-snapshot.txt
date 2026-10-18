@@ -1,22 +1,5 @@
 [assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/Testably/aweXpect.Mockolate.git")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName=".NET Standard 2.0")]
-namespace aweXpect.Options
-{
-    public class WithinOptions
-    {
-        public WithinOptions() { }
-        public System.TimeSpan? Timeout { get; set; }
-        public override string ToString() { }
-    }
-}
-namespace aweXpect.Results
-{
-    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
-    {
-        public AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
-        public aweXpect.Results.AndOrWithinResult<TType, TThat> Within(System.TimeSpan timeout) { }
-    }
-}
+[assembly: System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0", FrameworkDisplayName = ".NET Standard 2.0")]
 namespace aweXpect
 {
     public static class ThatMockVerify
@@ -56,3 +39,21 @@ namespace aweXpect
         public static aweXpect.Results.AndOrWithinResult<Mockolate.Verify.VerificationResult<TVerify>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>>> Twice<TVerify>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>> subject) { }
     }
 }
+namespace aweXpect.Options
+{
+    public class WithinOptions
+    {
+        public WithinOptions() { }
+        public System.TimeSpan? Timeout { get; set; }
+        public override string ToString() { }
+    }
+}
+namespace aweXpect.Results
+{
+    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
+    {
+        public AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
+        public aweXpect.Results.AndOrWithinResult<TType, TThat> Within(System.TimeSpan timeout) { }
+    }
+}
+

@@ -1,37 +1,20 @@
 [assembly: System.Reflection.AssemblyMetadata("IsTrimmable", "True")]
 [assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/Testably/aweXpect.Mockolate.git")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v8.0", FrameworkDisplayName=".NET 8.0")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
 namespace Mockolate.Web
 {
     public static class AweXpectItExtensions
     {
-        public interface IJsonContentBodyParameter : Mockolate.Parameters.IParameter, Mockolate.Parameters.IParameterWithCallback<System.Net.Http.HttpContent?>, Mockolate.Parameters.IParameter<System.Net.Http.HttpContent?>, Mockolate.Web.ItExtensions.IHttpContentParameter, Mockolate.Web.ItExtensions.IHttpHeaderParameter<Mockolate.Web.ItExtensions.IHttpContentHeaderParameter>
+        extension(Mockolate.Web.ItExtensions.IHttpContentParameter parameter)
+        {
+            public Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJson(string json, System.Text.Json.JsonDocumentOptions? options = null) { }
+            public Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJsonMatching(object? expected, System.Text.Json.JsonDocumentOptions? options = null) { }
+            public Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJsonMatching<T>(System.Collections.Generic.IEnumerable<T> expected, System.Text.Json.JsonDocumentOptions? options = null) { }
+        }
+        public interface IJsonContentBodyParameter : Mockolate.Parameters.IParameter, Mockolate.Parameters.IParameter<System.Net.Http.HttpContent?>, Mockolate.Parameters.IParameterWithCallback<System.Net.Http.HttpContent?>, Mockolate.Web.ItExtensions.IHttpContentParameter, Mockolate.Web.ItExtensions.IHttpHeaderParameter<Mockolate.Web.ItExtensions.IHttpContentHeaderParameter>
         {
             Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter IgnoringAdditionalProperties(bool ignoreAdditionalProperties = true);
         }
-        extension(Mockolate.Web.ItExtensions.IHttpContentParameter parameter)
-        {
-            Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJson(string json, System.Text.Json.JsonDocumentOptions? options = default);
-            Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJsonMatching(object? expected, System.Text.Json.JsonDocumentOptions? options = default);
-            Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter WithJsonMatching<T>(System.Collections.Generic.IEnumerable<T> expected, System.Text.Json.JsonDocumentOptions? options = default);
-        }
-    }
-}
-namespace aweXpect.Options
-{
-    public class WithinOptions
-    {
-        public WithinOptions() { }
-        public System.TimeSpan? Timeout { get; set; }
-        public override string ToString() { }
-    }
-}
-namespace aweXpect.Results
-{
-    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
-    {
-        public AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
-        public aweXpect.Results.AndOrWithinResult<TType, TThat> Within(System.TimeSpan timeout) { }
     }
 }
 namespace aweXpect
@@ -73,3 +56,21 @@ namespace aweXpect
         public static aweXpect.Results.AndOrWithinResult<Mockolate.Verify.VerificationResult<TVerify>, aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>>> Twice<TVerify>(this aweXpect.Core.IThat<Mockolate.Verify.VerificationResult<TVerify>> subject) { }
     }
 }
+namespace aweXpect.Options
+{
+    public class WithinOptions
+    {
+        public WithinOptions() { }
+        public System.TimeSpan? Timeout { get; set; }
+        public override string ToString() { }
+    }
+}
+namespace aweXpect.Results
+{
+    public class AndOrWithinResult<TType, TThat> : aweXpect.Results.AndOrResult<TType, TThat, aweXpect.Results.AndOrWithinResult<TType, TThat>>
+    {
+        public AndOrWithinResult(aweXpect.Core.ExpectationBuilder expectationBuilder, TThat returnValue, aweXpect.Options.WithinOptions options) { }
+        public aweXpect.Results.AndOrWithinResult<TType, TThat> Within(System.TimeSpan timeout) { }
+    }
+}
+

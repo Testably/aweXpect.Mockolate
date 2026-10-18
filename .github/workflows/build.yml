@@ -109,7 +109,7 @@ jobs:
                         8.0.x
                         10.0.3xx
             -   name: Run mutation tests
-                run: ./build.sh MutationTests MutationTestDashboard
+                run: ./build.sh MutationTests MutationTestsDashboard
     
     benchmarks:
         name: "Benchmarks"

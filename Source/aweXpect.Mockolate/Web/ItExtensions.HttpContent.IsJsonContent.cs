@@ -20,8 +20,14 @@ public static class AweXpectItExtensions
 	extension(ItExtensions.IHttpContentParameter parameter)
 	{
 		/// <summary>
-		///     Expects the <see cref="HttpContent" /> to have a body equal to the given <paramref name="json" />.
+		///     Expects the <see cref="HttpContent" /> to have a JSON body equivalent to the given <paramref name="json" />,
+		///     ignoring differences in formatting and property order.
 		/// </summary>
+		/// <remarks>
+		///     By default, additional properties and additional array elements in the body do not match. Allow them with
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalProperties(bool)" /> and
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalArrayElements(bool)" />.
+		/// </remarks>
 		/// <exception cref="ArgumentNullException">The <paramref name="json" /> is <see langword="null" />.</exception>
 		/// <exception cref="ArgumentException">The <paramref name="json" /> is not valid JSON.</exception>
 		public IJsonContentBodyParameter WithJson(string json, JsonDocumentOptions? options = null)
@@ -31,7 +37,7 @@ public static class AweXpectItExtensions
 				throw Tracing.WriteException(new ArgumentNullException(nameof(json), "The 'json' cannot be null."));
 			}
 
-			JsonContentParameter jsonContentParameter = new(parameter);
+			JsonContentParameter jsonContentParameter = new(parameter, false);
 			jsonContentParameter.WithBody(json, options);
 			parameter.WithString(b => jsonContentParameter.Matches(b));
 			return jsonContentParameter;
@@ -40,9 +46,14 @@ public static class AweXpectItExtensions
 		/// <summary>
 		///     Expects the <see cref="HttpContent" /> to have a JSON body which matches the <paramref name="expected" /> value.
 		/// </summary>
+		/// <remarks>
+		///     By default, additional properties and additional array elements in the body are ignored. Disallow them with
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalProperties(bool)" /> and
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalArrayElements(bool)" />.
+		/// </remarks>
 		public IJsonContentBodyParameter WithJsonMatching(object? expected, JsonDocumentOptions? options = null)
 		{
-			JsonContentParameter jsonContentParameter = new(parameter);
+			JsonContentParameter jsonContentParameter = new(parameter, true);
 			jsonContentParameter.WithBodyMatching(expected, options);
 			parameter.WithString(b => jsonContentParameter.Matches(b));
 			return jsonContentParameter;
@@ -51,10 +62,15 @@ public static class AweXpectItExtensions
 		/// <summary>
 		///     Expects the <see cref="HttpContent" /> to have a JSON body which matches the <paramref name="expected" /> value.
 		/// </summary>
+		/// <remarks>
+		///     By default, additional properties and additional array elements in the body are ignored. Disallow them with
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalProperties(bool)" /> and
+		///     <see cref="IJsonContentBodyParameter.IgnoringAdditionalArrayElements(bool)" />.
+		/// </remarks>
 		public IJsonContentBodyParameter WithJsonMatching<T>(IEnumerable<T> expected,
 			JsonDocumentOptions? options = null)
 		{
-			JsonContentParameter jsonContentParameter = new(parameter);
+			JsonContentParameter jsonContentParameter = new(parameter, true);
 			jsonContentParameter.WithBodyMatching(expected, options);
 			parameter.WithString(b => jsonContentParameter.Matches(b));
 			return jsonContentParameter;
@@ -67,9 +83,26 @@ public static class AweXpectItExtensions
 	public interface IJsonContentBodyParameter : ItExtensions.IHttpContentParameter
 	{
 		/// <summary>
-		///     Ignores additional properties in JSON objects when comparing.
+		///     Ignores additional properties of objects in the body
+		///     when <paramref name="ignoreAdditionalProperties" /> is <see langword="true" />.
 		/// </summary>
+		/// <remarks>
+		///     Additional elements of arrays are not affected, use <see cref="IgnoringAdditionalArrayElements" /> instead.
+		///     <para />
+		///     Additional properties do not match by default with <c>WithJson</c> and are ignored by default with
+		///     <c>WithJsonMatching</c>.
+		/// </remarks>
 		IJsonContentBodyParameter IgnoringAdditionalProperties(bool ignoreAdditionalProperties = true);
+
+		/// <summary>
+		///     Ignores additional elements after the expected elements of arrays in the body
+		///     when <paramref name="ignoreAdditionalArrayElements" /> is <see langword="true" />.
+		/// </summary>
+		/// <remarks>
+		///     Additional array elements do not match by default with <c>WithJson</c> and are ignored by default with
+		///     <c>WithJsonMatching</c>.
+		/// </remarks>
+		IJsonContentBodyParameter IgnoringAdditionalArrayElements(bool ignoreAdditionalArrayElements = true);
 	}
 
 	private sealed class JsonContentParameter : IJsonContentBodyParameter
@@ -77,18 +110,28 @@ public static class AweXpectItExtensions
 		private readonly ItExtensions.IHttpContentParameter _parameter;
 
 		private JsonElement _expected;
-		private bool _ignoringAdditionalProperties = true;
+		private bool _ignoringAdditionalArrayElements;
+		private bool _ignoringAdditionalProperties;
 		private JsonDocumentOptions _jsonDocumentOptions;
 
-		public JsonContentParameter(ItExtensions.IHttpContentParameter parameter)
+		public JsonContentParameter(ItExtensions.IHttpContentParameter parameter, bool ignoringAdditional)
 		{
 			_parameter = parameter;
+			_ignoringAdditionalProperties = ignoringAdditional;
+			_ignoringAdditionalArrayElements = ignoringAdditional;
 		}
 
 		/// <inheritdoc cref="IJsonContentBodyParameter.IgnoringAdditionalProperties(bool)" />
 		public IJsonContentBodyParameter IgnoringAdditionalProperties(bool ignoreAdditionalProperties = true)
 		{
 			_ignoringAdditionalProperties = ignoreAdditionalProperties;
+			return this;
+		}
+
+		/// <inheritdoc cref="IJsonContentBodyParameter.IgnoringAdditionalArrayElements(bool)" />
+		public IJsonContentBodyParameter IgnoringAdditionalArrayElements(bool ignoreAdditionalArrayElements = true)
+		{
+			_ignoringAdditionalArrayElements = ignoreAdditionalArrayElements;
 			return this;
 		}
 
@@ -121,7 +164,7 @@ public static class AweXpectItExtensions
 			try
 			{
 				using JsonDocument actualDocument = JsonDocument.Parse(value, _jsonDocumentOptions);
-				return Compare(actualDocument.RootElement, _expected, _ignoringAdditionalProperties);
+				return Compare(actualDocument.RootElement, _expected);
 			}
 			catch (JsonException)
 			{
@@ -177,10 +220,9 @@ public static class AweXpectItExtensions
 			AllowTrailingCommas = true,
 		};
 
-		private static bool Compare(
+		private bool Compare(
 			JsonElement actualElement,
-			JsonElement expectedElement,
-			bool ignoreAdditionalProperties)
+			JsonElement expectedElement)
 		{
 			if (actualElement.ValueKind != expectedElement.ValueKind)
 			{
@@ -189,16 +231,15 @@ public static class AweXpectItExtensions
 
 			return actualElement.ValueKind switch
 			{
-				JsonValueKind.Array => CompareJsonArray(actualElement, expectedElement, ignoreAdditionalProperties),
+				JsonValueKind.Array => CompareJsonArray(actualElement, expectedElement),
 				JsonValueKind.Number => CompareJsonNumber(actualElement, expectedElement),
 				JsonValueKind.String => CompareJsonString(actualElement, expectedElement),
-				JsonValueKind.Object => CompareJsonObject(actualElement, expectedElement, ignoreAdditionalProperties),
+				JsonValueKind.Object => CompareJsonObject(actualElement, expectedElement),
 				_ => true,
 			};
 		}
 
-		private static bool CompareJsonObject(JsonElement actualElement, JsonElement expectedElement,
-			bool ignoreAdditionalProperties)
+		private bool CompareJsonObject(JsonElement actualElement, JsonElement expectedElement)
 		{
 			foreach (JsonProperty item in expectedElement.EnumerateObject())
 			{
@@ -207,13 +248,13 @@ public static class AweXpectItExtensions
 					return false;
 				}
 
-				if (!Compare(property, item.Value, ignoreAdditionalProperties))
+				if (!Compare(property, item.Value))
 				{
 					return false;
 				}
 			}
 
-			if (!ignoreAdditionalProperties)
+			if (!_ignoringAdditionalProperties)
 			{
 				foreach (JsonProperty property in actualElement.EnumerateObject())
 				{
@@ -227,8 +268,7 @@ public static class AweXpectItExtensions
 			return true;
 		}
 
-		private static bool CompareJsonArray(JsonElement actualElement, JsonElement expectedElement,
-			bool ignoreAdditionalProperties)
+		private bool CompareJsonArray(JsonElement actualElement, JsonElement expectedElement)
 		{
 			for (int index = 0; index < expectedElement.GetArrayLength(); index++)
 			{
@@ -239,13 +279,14 @@ public static class AweXpectItExtensions
 				}
 
 				JsonElement actualArrayElement = actualElement[index];
-				if (!Compare(actualArrayElement, expectedArrayElement, ignoreAdditionalProperties))
+				if (!Compare(actualArrayElement, expectedArrayElement))
 				{
 					return false;
 				}
 			}
 
-			return ignoreAdditionalProperties || actualElement.GetArrayLength() <= expectedElement.GetArrayLength();
+			return _ignoringAdditionalArrayElements ||
+			       actualElement.GetArrayLength() <= expectedElement.GetArrayLength();
 		}
 
 		private static bool CompareJsonString(JsonElement actualElement, JsonElement expectedElement)

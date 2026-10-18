@@ -184,6 +184,21 @@ internal static class Checks
 				await That(httpClient.Mock.Verify.PostAsync(It.IsAny<Uri>(),
 					It.IsHttpContent().WithJson("{\"foo\": 1}"))).Once();
 			}, "exactly once,", "but it was never found")),
+		new("WithJson fails for additional properties and array elements",
+			() => ShouldFail(async () =>
+			{
+				HttpClient httpClient = await PostAsync("{\"foo\": [1, 2], \"bar\": \"baz\"}");
+				await That(httpClient.Mock.Verify.PostAsync(It.IsAny<Uri>(),
+					It.IsHttpContent().WithJson("{\"foo\": [1]}"))).Once();
+			}, "exactly once,", "but it was never found")),
+		new("WithJson passes for ignored additional properties and array elements",
+			() => ShouldPass(async () =>
+			{
+				HttpClient httpClient = await PostAsync("{\"foo\": [1, 2], \"bar\": \"baz\"}");
+				await That(httpClient.Mock.Verify.PostAsync(It.IsAny<Uri>(),
+					It.IsHttpContent().WithJson("{\"foo\": [1]}")
+						.IgnoringAdditionalProperties().IgnoringAdditionalArrayElements())).Once();
+			})),
 		new("WithJsonMatching passes for an equivalent body or fails loudly",
 			() => ShouldPassOrFailLoudly(async () =>
 			{

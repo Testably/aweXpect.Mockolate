@@ -14,6 +14,7 @@ namespace Mockolate.Web
         }
         public interface IJsonContentBodyParameter : Mockolate.Parameters.IParameter, Mockolate.Parameters.IParameter<System.Net.Http.HttpContent?>, Mockolate.Parameters.IParameterWithCallback<System.Net.Http.HttpContent?>, Mockolate.Web.ItExtensions.IHttpContentParameter, Mockolate.Web.ItExtensions.IHttpHeaderParameter<Mockolate.Web.ItExtensions.IHttpContentHeaderParameter>
         {
+            Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter IgnoringAdditionalArrayElements(bool ignoreAdditionalArrayElements = true);
             Mockolate.Web.AweXpectItExtensions.IJsonContentBodyParameter IgnoringAdditionalProperties(bool ignoreAdditionalProperties = true);
         }
     }

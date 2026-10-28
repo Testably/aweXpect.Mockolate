@@ -9,8 +9,8 @@ using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
 using aweXpect.Core.Extending;
 using aweXpect.Helpers;
-using aweXpect.Options;
-using aweXpect.Results;
+using aweXpect.Mockolate.Options;
+using aweXpect.Mockolate.Results;
 using Mockolate;
 using Mockolate.Exceptions;
 using Mockolate.Interactions;
@@ -29,8 +29,8 @@ public static partial class ThatVerificationResult
 	/// </remarks>
 	/// <exception cref="ArgumentNullException">The <paramref name="interactions" /> are <see langword="null" />.</exception>
 	[GuaranteesNotNull]
-	public static AndOrWithinResult<VerificationResult<T>, IThat<VerificationResult<T>>> Then<T>(
-		this IThat<VerificationResult<T>> subject, params Func<T, VerificationResult<T>>[] interactions)
+	public static AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>> Then<TVerify>(
+		this IThat<VerificationResult<TVerify>> subject, params Func<TVerify, VerificationResult<TVerify>>[] interactions)
 	{
 		if (interactions is null)
 		{
@@ -38,11 +38,11 @@ public static partial class ThatVerificationResult
 				new ArgumentNullException(nameof(interactions), "The 'interactions' cannot be null."));
 		}
 
-		WithinOptions options = new();
-		return new AndOrWithinResult<VerificationResult<T>, IThat<VerificationResult<T>>>(
+		OptionsHolder<WithinOptions> options = new(WithinOptions.Default);
+		return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
 			subject.Get().ExpectationBuilder.AddConstraint((Interactions: interactions, Options: options),
 				static (s, expectationBuilder, it, grammars)
-					=> new ThenConstraint<T>(expectationBuilder, it, grammars, s.Interactions, s.Options)),
+					=> new ThenConstraint<TVerify>(expectationBuilder, it, grammars, s.Interactions, s.Options)),
 			subject,
 			options);
 	}
@@ -51,14 +51,14 @@ public static partial class ThatVerificationResult
 	///     Interactions are only appended, so an interaction found for a step keeps its place before the interactions
 	///     that are recorded later, and every step is checked on the newest snapshot.
 	/// </remarks>
-	private sealed class ThenConstraint<T>(
+	private sealed class ThenConstraint<TVerify>(
 		ExpectationBuilder expectationBuilder,
 		string it,
 		ExpectationGrammars grammars,
-		Func<T, VerificationResult<T>>[] interactions,
-		WithinOptions options)
-		: ConstraintResult.WithNotNullValue<VerificationResult<T>>(it, grammars),
-			IAsyncContextConstraint<VerificationResult<T>>
+		Func<TVerify, VerificationResult<TVerify>>[] interactions,
+		OptionsHolder<WithinOptions> options)
+		: ConstraintResult.WithNotNullValue<VerificationResult<TVerify>>(it, grammars),
+			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
 		private readonly List<string> _expectations = new();
 		private readonly Dictionary<IInteraction, int> _positions = new();
@@ -68,7 +68,7 @@ public static partial class ThatVerificationResult
 		private IInteraction[]? _snapshot;
 		private IVerificationResult? _step;
 
-		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<T>? actual,
+		public async ValueTask<ConstraintResult> IsMetBy(VerificationResult<TVerify>? actual,
 			IEvaluationContext context, CancellationToken cancellationToken)
 		{
 			Actual = actual;
@@ -83,8 +83,8 @@ public static partial class ThatVerificationResult
 				return this;
 			}
 
-			T verify = ((IVerificationResult<T>)actual).Object;
-			TimeSpan? timeout = options.Timeout ?? expectationBuilder.Timeout;
+			TVerify verify = ((IVerificationResult<TVerify>)actual).Object;
+			TimeSpan? timeout = options.Value.Timeout ?? expectationBuilder.Timeout;
 			using CancellationTokenSource? budgetCts =
 				timeout is not null || expectationBuilder.CancellationToken is not null
 					? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
@@ -92,7 +92,7 @@ public static partial class ThatVerificationResult
 			budgetCts?.CancelAfter(timeout ?? Timeout.InfiniteTimeSpan);
 			long startTimestamp = context.GetTimestamp();
 			Func<IInteraction[], bool> check = Check;
-			VerificationResult<T> step = actual;
+			VerificationResult<TVerify> step = actual;
 			Outcome outcome = Outcome.Success;
 			int index = 0;
 			while (true)
@@ -121,7 +121,7 @@ public static partial class ThatVerificationResult
 		///     Only a step without a timeout of its own gets the rest of the <paramref name="budgetCts" />. Without any
 		///     rest it is checked once, without waiting.
 		/// </remarks>
-		private async ValueTask<Outcome> VerifyStep(VerificationResult<T> step, Func<IInteraction[], bool> check,
+		private async ValueTask<Outcome> VerifyStep(VerificationResult<TVerify> step, Func<IInteraction[], bool> check,
 			CancellationTokenSource? budgetCts, TimeSpan? timeout, long startTimestamp, IEvaluationContext context,
 			CancellationToken cancellationToken)
 		{
@@ -235,8 +235,8 @@ public static partial class ThatVerificationResult
 		public override bool TryGetStoredValue<TValue>(out TValue? value) where TValue : default
 		{
 			if (typeof(TValue) == typeof(IDescribableSubject) &&
-			    Actual is IVerificationResult<T> verificationResult &&
-			    new MyDescribableSubject<T>(verificationResult.Object as IMock) is TValue describableSubject)
+			    Actual is IVerificationResult<TVerify> verificationResult &&
+			    new MyDescribableSubject<TVerify>(verificationResult.Object as IMock) is TValue describableSubject)
 			{
 				value = describableSubject;
 				return true;

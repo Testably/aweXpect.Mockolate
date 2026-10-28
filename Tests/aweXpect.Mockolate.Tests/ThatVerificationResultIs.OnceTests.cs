@@ -261,7 +261,18 @@ public sealed partial class ThatVerificationResultIs
 				await That(subject).Once().Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<FailException>();
+			await That(Act).Throws<FailException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:00.050,
+				             but it was never found
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """);
 
 			Task backgroundTask = Task.Delay(500).ContinueWith(_ => sut.MyMethod(1, false));
 
@@ -287,7 +298,18 @@ public sealed partial class ThatVerificationResultIs
 					.Within(30.Seconds());
 			}
 
-			await That(Act).Throws<FailException>();
+			await That(Act).Throws<FailException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:30,
+				             but it was never found
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """);
 			await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
 				.Because("the shorter timeout of the subject ends the wait");
 		}

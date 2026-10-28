@@ -9,7 +9,7 @@ public sealed partial class ThatVerificationResultIs
 	public sealed class WithinTests
 	{
 		[Test]
-		public async Task WhenSpecifiedTwice_ShouldThrowInvalidOperationException()
+		public async Task WhenSpecifiedTwice_ShouldUseLastTimeout()
 		{
 			IMyService sut = IMyService.CreateMock();
 
@@ -19,9 +19,19 @@ public sealed partial class ThatVerificationResultIs
 					.Within(50.Milliseconds());
 			}
 
-			await That(Act).Throws<InvalidOperationException>()
-				.WithMessage("Within cannot be specified more than once.")
-				.Because("the second timeout would silently replace the first one");
+			await That(Act).Throws<FailException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1, false) exactly once within 0:00.050,
+				             but it was never found
+
+				             Matching Interactions:
+				             []
+
+				             All Interactions:
+				             []
+				             """)
+				.Because("a repeated option replaces the earlier one, like in core");
 		}
 
 		[Test]

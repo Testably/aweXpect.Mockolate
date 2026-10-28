@@ -7,8 +7,8 @@ using aweXpect.Core;
 using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
 using aweXpect.Core.Extending;
-using aweXpect.Options;
-using aweXpect.Results;
+using aweXpect.Mockolate.Options;
+using aweXpect.Mockolate.Results;
 using Mockolate.Verify;
 
 namespace aweXpect;
@@ -31,7 +31,7 @@ public static partial class ThatVerificationResult
 				new ArgumentNullException(nameof(predicate), "The 'predicate' cannot be null."));
 		}
 
-		WithinOptions options = new();
+		OptionsHolder<WithinOptions> options = new(WithinOptions.Default);
 		return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
 			subject.Get().ExpectationBuilder.AddConstraint(
 				(Predicate: predicate, Expression: doNotPopulateThisValue, Options: options),
@@ -48,7 +48,7 @@ public static partial class ThatVerificationResult
 		ExpectationGrammars grammars,
 		Func<int, bool> predicate,
 		string predicateExpression,
-		WithinOptions options)
+		OptionsHolder<WithinOptions> options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{

@@ -98,7 +98,18 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.Is(1))))
-				.Throws<FailException>();
+				.Throws<FailException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1), then
+				             invoked method MyMethod(1) in order,
+				             but it invoked method MyMethod(1) too early
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1)
+				             ]
+				             """);
 		}
 
 		[Test]
@@ -252,7 +263,21 @@ public sealed partial class ThatVerificationResultIs
 
 			await That(async Task () => await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 					.Then(m => m.MyMethod(It.IsAny<int>()), m => m.MyMethod(It.Is(3))))
-				.Throws<FailException>();
+				.Throws<FailException>()
+				.WithMessage("""
+				             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+				             invoked method MyMethod(1), then
+				             invoked method MyMethod(It.IsAny<int>()), then
+				             invoked method MyMethod(3) in order,
+				             but it invoked method MyMethod(3) too early
+
+				             All Interactions:
+				             [
+				               invoke method MyMethod(1),
+				               invoke method MyMethod(3),
+				               invoke method MyMethod(2)
+				             ]
+				             """);
 		}
 
 		[Test]

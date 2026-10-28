@@ -36,7 +36,7 @@ public class AndOrWithinResult<TType, TThat>
 	/// <exception cref="ArgumentOutOfRangeException">The <paramref name="timeout" /> is negative.</exception>
 	public AndOrWithinResult<TType, TThat> Within(TimeSpan timeout)
 	{
-		_options.Value = _options.Value.Within(timeout);
+		_options.Value = WithinOptions.Within(timeout);
 		return this;
 	}
 }

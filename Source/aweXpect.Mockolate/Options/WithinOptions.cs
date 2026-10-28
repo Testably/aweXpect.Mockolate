@@ -35,7 +35,7 @@ public readonly struct WithinOptions
 	///     <see cref="System.Threading.Timeout.InfiniteTimeSpan" /> imposes no limit.
 	/// </remarks>
 	/// <exception cref="ArgumentOutOfRangeException">The <paramref name="timeout" /> is negative.</exception>
-	public WithinOptions Within(TimeSpan timeout)
+	public static WithinOptions Within(TimeSpan timeout)
 	{
 		if (timeout < TimeSpan.Zero && timeout != System.Threading.Timeout.InfiniteTimeSpan)
 		{

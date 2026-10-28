@@ -65,7 +65,7 @@ namespace aweXpect.Mockolate.Options
         public System.TimeSpan? Timeout { get; }
         public static aweXpect.Mockolate.Options.WithinOptions Default { get; }
         public override string ToString() { }
-        public aweXpect.Mockolate.Options.WithinOptions Within(System.TimeSpan timeout) { }
+        public static aweXpect.Mockolate.Options.WithinOptions Within(System.TimeSpan timeout) { }
     }
 }
 namespace aweXpect.Mockolate.Results

@@ -9,7 +9,7 @@ using aweXpect.Core;
 using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
 using aweXpect.Helpers;
-using aweXpect.Options;
+using aweXpect.Mockolate.Options;
 using Mockolate;
 using Mockolate.Exceptions;
 using Mockolate.Interactions;
@@ -85,7 +85,7 @@ public static partial class ThatVerificationResult
 		///     neither a timeout nor a cancellation makes the verification wait.
 		/// </remarks>
 		protected async ValueTask VerifyAsync(VerificationResult<TVerify>? actual,
-			ExpectationBuilder expectationBuilder, WithinOptions? options, IEvaluationContext context,
+			ExpectationBuilder expectationBuilder, OptionsHolder<WithinOptions>? options, IEvaluationContext context,
 			CancellationToken cancellationToken)
 		{
 			if (!Start(actual))
@@ -94,7 +94,7 @@ public static partial class ThatVerificationResult
 			}
 
 			VerificationResult<TVerify> verificationResult = actual;
-			TimeSpan? timeout = options is null ? null : options.Timeout ?? expectationBuilder.Timeout;
+			TimeSpan? timeout = options is null ? null : options.Value.Timeout ?? expectationBuilder.Timeout;
 			if ((timeout is not null || (options is not null && expectationBuilder.CancellationToken is not null)) &&
 			    verificationResult is not IAsyncVerificationResult)
 			{
@@ -205,7 +205,7 @@ public static partial class ThatVerificationResult
 		string it,
 		ExpectationGrammars grammars,
 		int expected,
-		WithinOptions? options)
+		OptionsHolder<WithinOptions>? options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{
@@ -308,7 +308,7 @@ public static partial class ThatVerificationResult
 		string it,
 		ExpectationGrammars grammars,
 		int expected,
-		WithinOptions options)
+		OptionsHolder<WithinOptions> options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{

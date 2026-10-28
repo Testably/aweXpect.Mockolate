@@ -1,8 +1,8 @@
 using System;
 using aweXpect.Core;
 using aweXpect.Core.Extending;
-using aweXpect.Options;
-using aweXpect.Results;
+using aweXpect.Mockolate.Options;
+using aweXpect.Mockolate.Results;
 using Mockolate.Verify;
 
 namespace aweXpect;
@@ -23,7 +23,7 @@ public static partial class ThatVerificationResult
 				new ArgumentOutOfRangeException(nameof(times), "The minimum must not be negative."));
 		}
 
-		WithinOptions options = new();
+		OptionsHolder<WithinOptions> options = new(WithinOptions.Default);
 		return new AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>(
 			subject.Get().ExpectationBuilder.AddConstraint((Count: times.Value, Options: options),
 				static (s, expectationBuilder, it, grammars)

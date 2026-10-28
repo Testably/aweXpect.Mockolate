@@ -6,7 +6,8 @@ using aweXpect.Core;
 using aweXpect.Core.Constraints;
 using aweXpect.Core.EvaluationContext;
 using aweXpect.Core.Extending;
-using aweXpect.Options;
+using aweXpect.Mockolate.Options;
+using aweXpect.Mockolate.Results;
 using aweXpect.Results;
 using Mockolate.Verify;
 
@@ -32,7 +33,7 @@ public static partial class ThatVerificationResult
 				new ArgumentOutOfRangeException(nameof(minimum), "The minimum must not be negative."));
 		}
 
-		WithinOptions options = new();
+		OptionsHolder<WithinOptions> options = new(WithinOptions.Default);
 		return new
 			BetweenResult<AndOrWithinResult<VerificationResult<TVerify>, IThat<VerificationResult<TVerify>>>,
 				Times>(maximum =>
@@ -66,7 +67,7 @@ public static partial class ThatVerificationResult
 		ExpectationGrammars grammars,
 		int minimum,
 		int maximum,
-		WithinOptions options)
+		OptionsHolder<WithinOptions> options)
 		: VerificationCountConstraint<TVerify>(it, grammars),
 			IAsyncContextConstraint<VerificationResult<TVerify>>
 	{

@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using aweXpect.Core;
+using aweXpect.Core.Extending;
 using Mockolate.Parameters;
 
 // ReSharper disable once CheckNamespace

@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using aweXpect.Core;
+using aweXpect.Core.Extending;
 using Mockolate;
 using Mockolate.Web;
 using static aweXpect.Expect;

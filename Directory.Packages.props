@@ -3,8 +3,8 @@
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageVersion Include="aweXpect" Version="3.4.0"/>
-		<PackageVersion Include="aweXpect.Core" Version="3.4.0"/>
+		<PackageVersion Include="aweXpect" Version="4.0.0-pre.2"/>
+		<PackageVersion Include="aweXpect.Core" Version="4.0.0-pre.2"/>
 		<PackageVersion Include="aweXpect.Chronology" Version="1.1.0"/>
 		<PackageVersion Include="Mockolate" Version="3.6.0"/>
 	</ItemGroup>
@@ -26,6 +26,6 @@
 		<PackageVersion Include="TUnit.Engine" Version="1.76.28"/>
 		<PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1"/>
 		<PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0"/>
-		<PackageVersion Include="aweXpect.Snapshots.PublicApi" Version="0.6.0"/>
+		<PackageVersion Include="aweXpect.Snapshots.PublicApi" Version="4.0.0-beta.0.pre.2"/>
 	</ItemGroup>
 </Project>

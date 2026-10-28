@@ -1,6 +1,8 @@
 using System.Threading;
 using aweXpect.Core.Internal;
 
+#pragma warning disable aweXpect5001 // ITimeSystem is for testing purposes only
+
 namespace aweXpect.Mockolate.Tests.TestHelpers;
 
 /// <summary>

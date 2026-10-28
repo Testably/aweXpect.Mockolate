@@ -508,10 +508,12 @@ public sealed partial class ThatVerificationResultIs
 
 				async Task Act()
 				{
+#pragma warning disable aweXpect5001 // WithTimeSystem is for testing purposes only
 					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 						.Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()), m => m.MyMethod(It.Is(3)))
 						.Within(30.Seconds())
 						.WithTimeSystem(timeSystem);
+#pragma warning restore aweXpect5001
 				}
 
 				Task act = Act();

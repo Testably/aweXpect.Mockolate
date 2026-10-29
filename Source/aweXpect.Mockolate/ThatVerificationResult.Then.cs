@@ -89,7 +89,11 @@ public static partial class ThatVerificationResult
 				timeout is not null || expectationBuilder.CancellationToken is not null
 					? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
 					: null;
-			budgetCts?.CancelAfter(timeout ?? Timeout.InfiniteTimeSpan);
+			if (budgetCts is not null && timeout is not null)
+			{
+				context.CancelAfter(budgetCts, timeout.Value);
+			}
+
 			long startTimestamp = context.GetTimestamp();
 			Func<IInteraction[], bool> check = Check;
 			VerificationResult<TVerify> step = actual;

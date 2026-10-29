@@ -112,7 +112,7 @@ public static partial class ThatVerificationResult
 			using CancellationTokenSource waitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			if (timeout is not null)
 			{
-				waitCts.CancelAfter(timeout.Value);
+				context.CancelAfter(waitCts, timeout.Value);
 			}
 
 			long startTimestamp = context.GetTimestamp();

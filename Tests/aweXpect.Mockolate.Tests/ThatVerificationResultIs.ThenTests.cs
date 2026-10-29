@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Threading;
 using aweXpect.Chronology;
-using aweXpect.Core.Internal;
+using aweXpect.Core;
 using aweXpect.Mockolate.Tests.TestHelpers;
 using Mockolate;
 using Mockolate.Verify;
@@ -526,23 +526,21 @@ public sealed partial class ThatVerificationResultIs
 			public async Task WhenBudgetIsUsedUpByStepWithOwnTimeout_ShouldCheckNextStepOnce()
 			{
 				IMyService sut = IMyService.CreateMock();
-				VirtualTimeSystem timeSystem = new();
+				VirtualTimeProvider timeProvider = new();
 				Stopwatch stopwatch = Stopwatch.StartNew();
 
 				sut.MyMethod(1);
 
 				async Task Act()
 				{
-#pragma warning disable aweXpect5001 // WithTimeSystem is for testing purposes only
 					await That(sut.Mock.Verify.MyMethod(It.Is(1)))
 						.Then(m => m.MyMethod(It.Is(2)).Within(30.Seconds()), m => m.MyMethod(It.Is(3)))
 						.Within(30.Seconds())
-						.WithTimeSystem(timeSystem);
-#pragma warning restore aweXpect5001
+						.WithTimeProvider(timeProvider);
 				}
 
 				Task act = Act();
-				timeSystem.Advance(31.Seconds());
+				timeProvider.Advance(31.Seconds());
 				sut.MyMethod(2);
 
 				await That(() => act).Throws<FailException>()
@@ -561,6 +559,46 @@ public sealed partial class ThatVerificationResultIs
 					             """);
 				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
 					.Because("the step with its own timeout used up the budget, so the next step is checked without waiting");
+			}
+
+			[Test]
+			public async Task WithTimeProvider_ShouldElapseBudgetOnItsClock()
+			{
+				IMyService sut = IMyService.CreateMock();
+				VirtualTimeProvider timeProvider = new();
+				Stopwatch stopwatch = Stopwatch.StartNew();
+
+				sut.MyMethod(1);
+
+				async Task Act()
+				{
+					await That(sut.Mock.Verify.MyMethod(It.Is(1))).Then(m => m.MyMethod(It.Is(2)))
+						.Within(30.Seconds())
+						.WithTimeProvider(timeProvider);
+				}
+
+				Task act = Act();
+				// The budget is only scheduled once the evaluation reaches the wait.
+				while (!act.IsCompleted)
+				{
+					timeProvider.Advance(31.Seconds());
+					await Task.Delay(10);
+				}
+
+				await That(() => act).Throws<FailException>()
+					.WithMessage("""
+					             Expected that the aweXpect.Mockolate.Tests.ThatVerificationResultIs.IMyService mock
+					             invoked method MyMethod(1), then
+					             invoked method MyMethod(2) in order within 0:30,
+					             but it invoked method MyMethod(2) not at all
+
+					             All Interactions:
+					             [
+					               invoke method MyMethod(1)
+					             ]
+					             """);
+				await That(stopwatch.Elapsed).IsLessThan(10.Seconds())
+					.Because("the budget elapses on the clock of the evaluation");
 			}
 
 			[Test]

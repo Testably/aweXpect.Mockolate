@@ -1,3 +1,7 @@
+---
+description: JSON matchers for It.IsHttpContent() in setups and verifications of a mocked HttpClient.
+---
+
 # HTTP content matchers
 
 Describes the JSON matchers that this package adds to Mockolate's `It.IsHttpContent()`.
@@ -9,7 +13,7 @@ Describes the JSON matchers that this package adds to Mockolate's `It.IsHttpCont
 | [`IgnoringAdditionalProperties`](#additional-properties-and-elements)    | whether additional properties in the JSON body are ignored     |
 | [`IgnoringAdditionalArrayElements`](#additional-properties-and-elements) | whether additional array elements in the JSON body are ignored |
 
-:::note[.NET 8 or later]
+:::info[.NET 8 or later]
 The HTTP content matchers require .NET 8 or later.
 :::
 
@@ -32,7 +36,7 @@ httpClient.Mock.Setup
     .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.Created));
 ```
 
-:::note[Trimming and Native AOT]
+:::warning[Trimming and Native AOT]
 `WithJsonMatching` serializes the expected value by reflection, which is switched off when publishing with trimming or
 Native AOT enabled, so use `WithJson` with the expected JSON as a string there.
 :::
@@ -60,8 +64,5 @@ httpClient.Mock.Setup
 ```
 
 :::warning[No match returns the default response]
-When the body does not match, the setup is not used and the mocked `HttpClient` returns its default response instead
-of failing. Earlier versions of `WithJson` ignored additional properties and array elements: to keep that behaviour,
-add `.IgnoringAdditionalProperties().IgnoringAdditionalArrayElements()` or pass the expected object to
-`WithJsonMatching`.
+When the body does not match, the setup is not used and the mocked `HttpClient` returns its default response instead of failing. Earlier versions of `WithJson` ignored additional properties and array elements: to keep that behavior, add `.IgnoringAdditionalProperties().IgnoringAdditionalArrayElements()` or pass the expected object to `WithJsonMatching`.
 :::

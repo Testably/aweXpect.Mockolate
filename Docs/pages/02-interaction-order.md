@@ -1,3 +1,7 @@
+---
+description: Verify with Then that the interactions with a Mockolate mock happened in the given order, also while waiting for them.
+---
+
 # Interaction order
 
 Describes the possible expectations for verifying the order of interactions with a mock.
@@ -18,7 +22,7 @@ player.Play("Let It Be");
 player.Pause();
 player.Stop();
 
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Then(
+await That(player.Mock.Verify.Play("Let It Be")).Then(
     m => m.Pause(),
     m => m.Stop());
 ```
@@ -57,7 +61,7 @@ _ = Task.Run(async () =>
     player.Stop();
 });
 
-await Expect.That(player.Mock.Verify.Play("Let It Be"))
+await That(player.Mock.Verify.Play("Let It Be"))
     .Then(m => m.Pause(), m => m.Stop())
     .Within(TimeSpan.FromSeconds(1));
 ```
@@ -86,6 +90,4 @@ The timeout is a budget for the whole sequence, counted from the start of the ve
   timeout took longer, it is checked once without waiting.
 - Without any timeout, the sequence is checked once.
 
-Like for the [interaction count](./01-interaction-count.md#waiting-for-interactions), `WithTimeout` without `Within`
-also sets the budget, and `WithCancellation` waits until the token is canceled, which leaves the expectation
-[inconclusive](https://docs.testably.org/aweXpect/how-it-works/time-and-cancellation#outcome).
+Like for the [interaction count](./01-interaction-count.md#waiting-for-interactions), `WithTimeout` without `Within` also sets the budget, and `WithCancellation` waits until the token is canceled, which leaves the expectation [inconclusive](/aweXpect/how-it-works/time-and-cancellation#outcome).

@@ -12,7 +12,7 @@ import PackageInstall from '@site/src/components/PackageInstall';
 
 <PackageInstall package="aweXpect.Mockolate" />
 
-The package adds its expectations to aweXpect, so the test project also needs the [`aweXpect`](/aweXpect/getting-started) package. The expectations live in the namespace `aweXpect`, the [HTTP content matchers](./04-http-content-matchers.md) in `Mockolate.Web`.
+It does not include [`aweXpect`](/aweXpect/getting-started) itself. The expectations live in the namespace `aweXpect`, the [HTTP content matchers](./04-http-content-matchers.md) in `Mockolate.Web`.
 
 ## At a glance
 

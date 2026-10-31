@@ -51,28 +51,28 @@ All Interactions:
 
 | Expectation                                                                                            | Summary                                                     |
 |--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
-| [`Once`, `Twice`, `Never`](Docs/pages/01-interaction-count.md)                                         | the interaction happened exactly once, twice or never       |
-| [`AtLeastOnce`, `AtLeastTwice`, `AtLeast`](Docs/pages/01-interaction-count.md)                         | the interaction happened at least the given number of times |
-| [`AtMostOnce`, `AtMostTwice`, `AtMost`](Docs/pages/01-interaction-count.md)                            | the interaction happened at most the given number of times  |
-| [`Exactly`, `Between`](Docs/pages/01-interaction-count.md)                                             | the interaction happened exactly or in a range of times     |
-| [`Times`](Docs/pages/01-interaction-count.md)                                                          | the number of interactions satisfies a predicate            |
-| [`Then`](Docs/pages/02-interaction-order.md)                                                           | the interactions happened in the given order                |
-| [`AllInteractionsAreVerified`](Docs/pages/03-interactions-and-setups.md#all-interactions-are-verified) | every interaction with the mock was verified                |
-| [`AllSetupsAreUsed`](Docs/pages/03-interactions-and-setups.md#all-setups-are-used)                     | every setup of the mock was used                            |
+| [`Once`, `Twice`, `Never`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count)                                         | the interaction happened exactly once, twice or never       |
+| [`AtLeastOnce`, `AtLeastTwice`, `AtLeast`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count)                         | the interaction happened at least the given number of times |
+| [`AtMostOnce`, `AtMostTwice`, `AtMost`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count)                            | the interaction happened at most the given number of times  |
+| [`Exactly`, `Between`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count)                                             | the interaction happened exactly or in a range of times     |
+| [`Times`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count)                                                          | the number of interactions satisfies a predicate            |
+| [`Then`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-order)                                                           | the interactions happened in the given order                |
+| [`AllInteractionsAreVerified`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interactions-and-setups#all-interactions-are-verified) | every interaction with the mock was verified                |
+| [`AllSetupsAreUsed`](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interactions-and-setups#all-setups-are-used)                     | every setup of the mock was used                            |
 
 Verifications of a minimum number of interactions and of their order can wait for interactions that happen in the
-background with `Within(timeout)`, see [Waiting for interactions](Docs/pages/01-interaction-count.md#waiting-for-interactions)
-and [Interaction order](Docs/pages/02-interaction-order.md#waiting-for-interactions).
+background with `Within(timeout)`, see [Waiting for interactions](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count#waiting-for-interactions)
+and [Interaction order](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-order#waiting-for-interactions).
 
 ## Documentation
 
 The full documentation is available at
 [docs.testably.org](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/):
 
-- [Interaction count](Docs/pages/01-interaction-count.md): how often a method was invoked, and waiting for
+- [Interaction count](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-count): how often a method was invoked, and waiting for
   interactions that happen in the background
-- [Interaction order](Docs/pages/02-interaction-order.md): `Then` to verify that methods were invoked in a specific order
-- [All interactions and setups](Docs/pages/03-interactions-and-setups.md): `AllInteractionsAreVerified` and
+- [Interaction order](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interaction-order): `Then` to verify that methods were invoked in a specific order
+- [All interactions and setups](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/interactions-and-setups): `AllInteractionsAreVerified` and
   `AllSetupsAreUsed`
-- [HTTP content matchers](Docs/pages/04-http-content-matchers.md): JSON matchers for `It.IsHttpContent()` in setups and
+- [HTTP content matchers](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/http-content-matchers): JSON matchers for `It.IsHttpContent()` in setups and
   verifications of a mocked `HttpClient`

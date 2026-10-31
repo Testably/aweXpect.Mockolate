@@ -15,7 +15,7 @@ Expectations to verify interactions with mocks from [Mockolate](https://github.c
 dotnet add package aweXpect.Mockolate
 ```
 
-The package adds its expectations to aweXpect, so the test project also needs the [`aweXpect`](https://www.nuget.org/packages/aweXpect) package. The examples assume `global using static aweXpect.Expect;`.
+It does not include [`aweXpect`](https://www.nuget.org/packages/aweXpect) itself. The examples assume `global using static aweXpect.Expect;`.
 
 ## At a glance
 

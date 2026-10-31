@@ -15,8 +15,7 @@ Expectations to verify interactions with mocks from [Mockolate](https://github.c
 dotnet add package aweXpect.Mockolate
 ```
 
-The package adds its expectations to aweXpect, so the test project also needs the
-[`aweXpect`](https://www.nuget.org/packages/aweXpect) package.
+The package adds its expectations to aweXpect, so the test project also needs the [`aweXpect`](https://www.nuget.org/packages/aweXpect) package. The examples assume `global using static aweXpect.Expect;`.
 
 ## At a glance
 
@@ -26,13 +25,13 @@ player.Play("Let It Be");
 player.Stop();
 
 // verify how often a method was invoked
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Once();
+await That(player.Mock.Verify.Play("Let It Be")).Once();
 
 // verify the order of the interactions
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Then(m => m.Stop());
+await That(player.Mock.Verify.Play("Let It Be")).Then(m => m.Stop());
 
 // verify that no interaction was forgotten
-await Expect.That(player.Mock.Verify).AllInteractionsAreVerified();
+await That(player.Mock.Verify).AllInteractionsAreVerified();
 ```
 
 A failing verification lists the matching and all interactions with the mock. If the track was played twice, `Once()`

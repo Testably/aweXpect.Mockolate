@@ -1,16 +1,18 @@
+---
+description: Expectations to verify how often and in which order the methods of a Mockolate mock were invoked, and that all interactions and setups were covered.
+---
+
 import PackageInstall from '@site/src/components/PackageInstall';
 
 # aweXpect.Mockolate
 
-[aweXpect.Mockolate](https://github.com/Testably/aweXpect.Mockolate) contains expectations to verify interactions with
-mocks from [Mockolate](/Mockolate). It is an extension for [aweXpect](/aweXpect).
+[aweXpect.Mockolate](https://github.com/Testably/aweXpect.Mockolate) contains expectations to verify interactions with mocks from [Mockolate](/Mockolate). It is an extension for [aweXpect](/aweXpect).
 
 ## Installation
 
 <PackageInstall package="aweXpect.Mockolate" />
 
-The package adds its expectations to aweXpect, so the test project also needs the
-[`aweXpect`](/aweXpect/getting-started) package.
+The package adds its expectations to aweXpect, so the test project also needs the [`aweXpect`](/aweXpect/getting-started) package. The expectations live in the namespace `aweXpect`, the [HTTP content matchers](./04-http-content-matchers.md) in `Mockolate.Web`.
 
 ## At a glance
 
@@ -20,13 +22,13 @@ player.Play("Let It Be");
 player.Stop();
 
 // verify how often a method was invoked
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Once();
+await That(player.Mock.Verify.Play("Let It Be")).Once();
 
 // verify the order of the interactions
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Then(m => m.Stop());
+await That(player.Mock.Verify.Play("Let It Be")).Then(m => m.Stop());
 
 // verify that no interaction was forgotten
-await Expect.That(player.Mock.Verify).AllInteractionsAreVerified();
+await That(player.Mock.Verify).AllInteractionsAreVerified();
 ```
 
 A failing verification lists the matching and all interactions with the mock. If the track was played twice, `Once()`

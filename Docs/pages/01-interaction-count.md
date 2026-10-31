@@ -1,3 +1,7 @@
+---
+description: Verify how often an interaction with a Mockolate mock happened, also for interactions that happen in the background.
+---
+
 # Interaction count
 
 Describes the possible expectations for verifying how often an interaction with a mock happened.
@@ -34,16 +38,17 @@ You can verify how often a method was invoked:
 
 ```csharp
 using aweXpect.Core; // for Times()
+using static aweXpect.Expect;
 
 IPlayer player = IPlayer.CreateMock();
 player.Play("Let It Be");
 
-await Expect.That(player.Mock.Verify.Play("Let It Be")).Once();
-await Expect.That(player.Mock.Verify.Play("Yesterday")).Never();
-await Expect.That(player.Mock.Verify.Play(It.IsAny<string>())).AtLeastOnce();
-await Expect.That(player.Mock.Verify.Play(It.IsAny<string>())).AtMost(3.Times());
-await Expect.That(player.Mock.Verify.Play(It.IsAny<string>())).Between(1).And(3.Times());
-await Expect.That(player.Mock.Verify.Play(It.IsAny<string>())).Times(n => n % 2 == 1);
+await That(player.Mock.Verify.Play("Let It Be")).Once();
+await That(player.Mock.Verify.Play("Yesterday")).Never();
+await That(player.Mock.Verify.Play(It.IsAny<string>())).AtLeastOnce();
+await That(player.Mock.Verify.Play(It.IsAny<string>())).AtMost(3.Times());
+await That(player.Mock.Verify.Play(It.IsAny<string>())).Between(1).And(3.Times());
+await That(player.Mock.Verify.Play(It.IsAny<string>())).Times(n => n % 2 == 1);
 ```
 
 When the track was played twice, `Once()` fails with:
@@ -84,7 +89,7 @@ _ = Task.Run(async () =>
     player.Play("Hey Jude");
 });
 
-await Expect.That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().Within(TimeSpan.FromSeconds(1));
+await That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().Within(TimeSpan.FromSeconds(1));
 ```
 
 When the interaction does not happen in time, e.g. a `Stop()` expected within 100 ms, the expectation fails:
@@ -103,21 +108,14 @@ All Interactions:
 ]
 ```
 
-Instead of a fixed time span, you can also provide a `CancellationToken` to wait for the expected interactions until
-it is canceled. Like for all aweXpect expectations, a cancellation leaves the expectation
-[inconclusive](https://docs.testably.org/aweXpect/how-it-works/time-and-cancellation#outcome) instead of failing it,
-so use `Within` to limit how long the verification waits:
+Instead of a fixed time span, you can also provide a `CancellationToken` to wait for the expected interactions until it is canceled. Like for all aweXpect expectations, a cancellation leaves the expectation [inconclusive](/aweXpect/how-it-works/time-and-cancellation#outcome) instead of failing it, so use `Within` to limit how long the verification waits:
 
 ```csharp
-await Expect.That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().WithCancellation(token);
+await That(player.Mock.Verify.Play("Hey Jude")).AtLeastOnce().WithCancellation(token);
 ```
 
-:::info[Waiting without `Within`]
-Unlike [other aweXpect expectations](https://docs.testably.org/aweXpect/how-it-works/time-and-cancellation#waiting),
-these verifications also wait for the interaction when only `WithTimeout` or `WithCancellation` is given: the timeout
-or the token bounds how long they wait, and the verification fails when the timeout elapses. `Within` sets an explicit
-wait, which is shown in the expectation; a shorter `WithTimeout` still ends it early with "it did not finish
-within …".
+:::note[Waiting without `Within`]
+Unlike [other aweXpect expectations](/aweXpect/how-it-works/time-and-cancellation#waiting), these verifications also wait for the interaction when only `WithTimeout` or `WithCancellation` is given: the timeout or the token bounds how long they wait, and the verification fails when the timeout elapses. `Within` sets an explicit wait, which is shown in the expectation; a shorter `WithTimeout` still ends it early with "it did not finish within …".
 :::
 
 :::note
@@ -133,7 +131,7 @@ verify that an interaction does not happen within the given time. It waits the w
 interaction happens:
 
 ```csharp
-await Expect.That(player.Mock.Verify.Stop()).DoesNotComplyWith(it => it.AtLeastOnce().Within(TimeSpan.FromSeconds(1)));
+await That(player.Mock.Verify.Stop()).DoesNotComplyWith(it => it.AtLeastOnce().Within(TimeSpan.FromSeconds(1)));
 ```
 
 :::warning

@@ -1,3 +1,7 @@
+---
+description: Verify that every interaction with a Mockolate mock was verified and every setup of it was used.
+---
+
 # All interactions and setups
 
 Describes the possible expectations for verifying that all interactions with a mock were verified and all its setups
@@ -20,8 +24,8 @@ player.Play("Let It Be");
 player.Play("Yesterday");
 player.Stop();
 
-await Expect.That(player.Mock.Verify.Play(It.IsAny<string>())).Twice();
-await Expect.That(player.Mock.Verify).AllInteractionsAreVerified();
+await That(player.Mock.Verify.Play(It.IsAny<string>())).Twice();
+await That(player.Mock.Verify).AllInteractionsAreVerified();
 ```
 
 The verification of `Play` covers both tracks, but `Stop()` was never verified:
@@ -48,7 +52,7 @@ player.Mock.Setup.Play("Yesterday").Returns(true);
 
 player.Play("Let It Be");
 
-await Expect.That(player.Mock.Verify).AllSetupsAreUsed();
+await That(player.Mock.Verify).AllSetupsAreUsed();
 ```
 
 ```text title="Failure message"

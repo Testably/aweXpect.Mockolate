@@ -80,7 +80,7 @@ dotnet run -c Release --project Benchmarks/aweXpect.Mockolate.Benchmarks -- --fi
 ## Documentation
 
 - The user documentation is `README.md` and `Docs/pages/*.md`. The pages are published to [docs.testably.org](https://docs.testably.org/aweXpect/extensions/aweXpect.Mockolate/): after a successful Build on `main`, `notify-docs-site.yml` triggers a rebuild of `Testably/Testably.Site`.
-- `Docs/pages/00-index.md` embeds the README through the `{README}` placeholder. Keep the overview table in the README and the tables on the pages in sync when adding an expectation.
+- `Docs/pages/00-index.md` is the docs landing page and is maintained separately from the README. Keep the overview tables in the README and in `00-index.md` and the tables on the pages in sync when adding an expectation.
 - The README is the package readme. `Pack` rewrites its badges for the release version.
 - `Docs/agents/` holds this guide and is not published.
 

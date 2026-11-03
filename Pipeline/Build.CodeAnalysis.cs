@@ -23,6 +23,7 @@ partial class Build
 				.SetSourceExclusions("build.ps1", "build.sh", "Pipeline/**", "Benchmarks/**")
 				.SetPullRequestOrBranchName(GitHubActions, GitVersion)
 				.SetVersion(GitVersion.SemVer)
+				.SetQualityGateWait(GitHubActions?.IsPullRequest == true)
 				.SetToken(SonarToken));
 		});
 

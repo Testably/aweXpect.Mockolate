@@ -24,7 +24,7 @@ The tests use [TUnit](https://tunit.dev/) on the Microsoft.Testing.Platform. Run
 dotnet test
 ```
 
-The public API tests in `Tests/aweXpect.Mockolate.Api.Tests` fail whenever the public API changes. If the change is intended, accept it with the explicit test `AcceptApiChanges`, which a normal run skips, and commit the updated `*.awexpect-snapshot.txt` files:
+The public API tests in `Tests/aweXpect.Mockolate.Api.Tests` fail whenever the public API changes. If the change is intended, accept it with the explicit test `AcceptApiChanges`, which a normal run skips, and commit the updated `*.awexpect-snapshot.cs` files:
 ```
 dotnet test --project Tests/aweXpect.Mockolate.Api.Tests --treenode-filter "/*/*/ApiApprovalTests/AcceptApiChanges"
 ```

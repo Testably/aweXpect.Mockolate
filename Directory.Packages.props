@@ -6,6 +6,7 @@
 		<PackageVersion Include="aweXpect" Version="4.2.0"/>
 		<PackageVersion Include="aweXpect.Core" Version="4.2.0"/>
 		<PackageVersion Include="aweXpect.Chronology" Version="1.1.0"/>
+		<PackageVersion Include="aweXpect.Snapshots.DiffEngine" Version="4.2.0"/>
 		<PackageVersion Include="aweXpect.Snapshots.PublicApi" Version="4.2.0"/>
 		<PackageVersion Include="Mockolate" Version="4.1.0"/>
 	</ItemGroup>

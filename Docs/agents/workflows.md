@@ -35,6 +35,7 @@ $env:AWEXPECT_ACCEPT_SNAPSHOTS = 'all'; dotnet test --project Tests/aweXpect.Moc
 - The tests use `aweXpect.Snapshots.PublicApi` to compare the public API of every target framework listed in `Source/Directory.Build.props` with `ApiApprovalTests/aweXpect.Mockolate/<tfm>.awexpect-snapshot.cs`.
 - Building the test project also builds every target framework of the library (`BuildAllTargetFrameworksOfReferencedProjects`), so the snapshots stay in sync with the configuration (Debug or Release) of the test run.
 - Accept an intended change with the environment variable above, by running the explicit `AcceptApiChanges` test (only with the filter above; a run without it skips the test), or by renaming the pending snapshot next to the test file. Review the snapshot diff before committing it.
+- Locally, a failing test opens a diff tool through `aweXpect.Snapshots.DiffEngine` (e.g. Rider, Visual Studio or VS Code) that compares the pending file with the snapshot, so the change can also be taken over there. It never opens on a build server; set `DiffEngine_Disabled=true` to turn it off locally.
 
 ## AOT smoke tests
 

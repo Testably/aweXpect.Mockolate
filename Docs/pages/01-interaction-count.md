@@ -6,20 +6,20 @@ description: Verify how often an interaction with a Mockolate mock happened, als
 
 Describes the possible expectations for verifying how often an interaction with a mock happened.
 
-| Expectation                               | Negated | Summary                                                     |
-|-------------------------------------------|---------|-------------------------------------------------------------|
-| [`Once`](#number-of-interactions)         |         | the interaction happened exactly once                       |
-| [`Twice`](#number-of-interactions)        |         | the interaction happened exactly twice                      |
-| [`Never`](#number-of-interactions)        |         | the interaction never happened                              |
-| [`AtLeastOnce`](#number-of-interactions)  |         | the interaction happened at least once                      |
-| [`AtLeastTwice`](#number-of-interactions) |         | the interaction happened at least twice                     |
-| [`AtLeast`](#number-of-interactions)      |         | the interaction happened at least the given number of times |
-| [`AtMostOnce`](#number-of-interactions)   |         | the interaction happened at most once                       |
-| [`AtMostTwice`](#number-of-interactions)  |         | the interaction happened at most twice                      |
-| [`AtMost`](#number-of-interactions)       |         | the interaction happened at most the given number of times  |
-| [`Exactly`](#number-of-interactions)      |         | the interaction happened exactly the given number of times  |
-| [`Between`](#number-of-interactions)      |         | the number of interactions is in the given range            |
-| [`Times`](#number-of-interactions)        |         | the number of interactions satisfies a predicate            |
+| Expectation                               | Summary                                                     |
+|-------------------------------------------|-------------------------------------------------------------|
+| [`Once`](#number-of-interactions)         | the interaction happened exactly once                       |
+| [`Twice`](#number-of-interactions)        | the interaction happened exactly twice                      |
+| [`Never`](#number-of-interactions)        | the interaction never happened                              |
+| [`AtLeastOnce`](#number-of-interactions)  | the interaction happened at least once                      |
+| [`AtLeastTwice`](#number-of-interactions) | the interaction happened at least twice                     |
+| [`AtLeast`](#number-of-interactions)      | the interaction happened at least the given number of times |
+| [`AtMostOnce`](#number-of-interactions)   | the interaction happened at most once                       |
+| [`AtMostTwice`](#number-of-interactions)  | the interaction happened at most twice                      |
+| [`AtMost`](#number-of-interactions)       | the interaction happened at most the given number of times  |
+| [`Exactly`](#number-of-interactions)      | the interaction happened exactly the given number of times  |
+| [`Between`](#number-of-interactions)      | the number of interactions is in the given range            |
+| [`Times`](#number-of-interactions)        | the number of interactions satisfies a predicate            |
 
 The samples use the following interface:
 

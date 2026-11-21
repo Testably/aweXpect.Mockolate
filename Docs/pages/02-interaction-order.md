@@ -6,9 +6,9 @@ description: Verify with Then that the interactions with a Mockolate mock happen
 
 Describes the possible expectations for verifying the order of interactions with a mock.
 
-| Expectation      | Negated | Summary                                      |
-|------------------|---------|----------------------------------------------|
-| [`Then`](#order) |         | the interactions happened in the given order |
+| Expectation      | Summary                                      |
+|------------------|----------------------------------------------|
+| [`Then`](#order) | the interactions happened in the given order |
 
 The samples use the `IPlayer` interface from [Interaction count](./01-interaction-count.md).
 
